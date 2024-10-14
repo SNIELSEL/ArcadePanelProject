@@ -1,0 +1,73 @@
+﻿<Window x:Class="WPFAdminControlApp.AddUserWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPFAdminControlApp"
+        mc:Ignorable="d"
+        Height="50" Width="620"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Background="Transparent"
+        Title="AddUserWindow"
+        AllowsTransparency="True">
+
+    <Border Background="#272537" CornerRadius="20">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+
+            <Border x:Name="TitleBar"
+                    Background="{StaticResource TitleBorderGradient}"
+                    Height="50"
+                    VerticalAlignment="Center"
+                    Grid.Column="0"
+                    CornerRadius="24,24,24,24"
+                    HorizontalAlignment="Left"
+                    Width="621"
+                    Grid.ColumnSpan="2"/>
+
+            <Border x:Name="MoveBar"
+                    Background="Transparent"
+                    Height="19"
+                    VerticalAlignment="Top"
+                    Cursor="SizeAll"
+                    CornerRadius="24,0,0,0"
+                    Margin="0,-1,0,0"
+                    HorizontalAlignment="Left"
+                    Width="693"
+                    Grid.ColumnSpan="2"
+                    Panel.ZIndex="1"/>
+
+
+            <TextBlock Text="AddUser" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White" FontSize="24" Margin="0,0,0,0"/>
+
+            <TextBox x:Name="UserText"
+                     Width="140" 
+                     Height="40" 
+                     VerticalContentAlignment="Center" 
+                     HorizontalAlignment="Left" 
+                     Margin="30,0,0,0" 
+                     Grid.Column="1"
+                     Style="{StaticResource UserTextBox}"/>
+
+            <TextBox x:Name="PasswordText"
+                    Width="140" 
+                    Height="40" 
+                    VerticalContentAlignment="Center" 
+                    HorizontalAlignment="Left" 
+                    Margin="190,0,0,0" 
+                    Grid.Column="1"
+                    Style="{StaticResource PasswordTextBox}"/>
+        </Grid>
+
+    </Border>
+</Window>

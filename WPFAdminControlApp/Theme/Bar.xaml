@@ -1,0 +1,39 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="TitleBarOriginalColor">#201123</Color>
+    <Color x:Key="TitleBarTargetColor">#272537</Color>
+
+    <Color x:Key="QuitBarOriginalColor">#d80000</Color>
+    <Color x:Key="QuitBarTargetColor">#d80000</Color>
+    
+    <LinearGradientBrush x:Key="TitleBorderGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource TitleBarOriginalColor}" Offset="0"/>
+        <GradientStop Color="{StaticResource TitleBarTargetColor}" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="QuitBorderGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource QuitBarOriginalColor}" Offset="0"/>
+        <GradientStop Color="{StaticResource QuitBarTargetColor}" Offset="1"/>
+    </LinearGradientBrush>
+
+    <Storyboard x:Key="TitleColorAnimationStoryboard">
+        <ColorAnimation 
+            Storyboard.TargetName="TitleBar"
+            Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)"
+            From="{StaticResource TitleBarOriginalColor}"
+            To="{StaticResource TitleBarTargetColor}"
+            Duration="0:0:0"
+            AutoReverse="False"/>
+    </Storyboard>
+
+    <Storyboard x:Key="QuitColorAnimationStoryboard">
+        <ColorAnimation 
+            Storyboard.TargetName="QuitBar"
+            Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.GradientStops)[1].(GradientStop.Color)"
+            From="{StaticResource QuitBarOriginalColor}"
+            To="{StaticResource QuitBarTargetColor}"
+            Duration="0:0:5"
+            AutoReverse="False"/>
+    </Storyboard>
+</ResourceDictionary>
