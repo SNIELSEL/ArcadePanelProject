@@ -102,7 +102,7 @@
                         HorizontalAlignment="Left" 
                         Margin="185,-50,0,0" 
                         Grid.Column="1"
-                        TextChanged="SetUser"
+                        TextChanged="SetCurrentUsername"
                         IsEnabled="True"
                         Style="{StaticResource UserTextBox}"/>
 
@@ -113,9 +113,11 @@
                         HorizontalAlignment="Left" 
                         Margin="315,-50,0,0" 
                         Grid.Column="1"
-                        TextChanged="SetPassword"
+                        TextChanged="SetCurrentPassword"
                         IsEnabled="True"
                         Style="{StaticResource PasswordTextBox}"/>
+
+                    <RadioButton x:Name="LoginEnter" Content="" Click="LoginToAdminPanel" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,-50,230,0" Height="35" Grid.Row="1" Grid.Column="1" Width="35" IsEnabled="True" Style="{StaticResource ImageButtonTheme}"/>
                 </StackPanel>
                 
                 <StackPanel x:Name="InterfacePanel" IsEnabled="False">

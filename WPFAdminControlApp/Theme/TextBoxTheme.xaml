@@ -178,11 +178,13 @@
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
                             <Setter TargetName="Border" Property="Background" Value="Transparent"/>
                             <Setter TargetName="Placeholder" Property="Foreground" Value="Transparent"/>
                             <Setter Property="Foreground" Value="Transparent"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
                             <Setter TargetName="Border" Property="Background" Value="#353340"/>
                             <Setter Property="Foreground" Value="#CFCFCF"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -230,11 +232,13 @@
 
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
                             <Setter TargetName="Border" Property="Background" Value="Transparent"/>
                             <Setter TargetName="Placeholder" Property="Foreground" Value="Transparent"/>
                             <Setter Property="Foreground" Value="Transparent"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
                             <Setter TargetName="Border" Property="Background" Value="#353340"/>
                             <Setter Property="Foreground" Value="#CFCFCF"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>

@@ -25,6 +25,9 @@ namespace WPFAdminControlApp
         public string panelLoginUsername = "Niels";
         public string panelLoginPassword = "Test";
 
+        public int sqlConnectionAttempts;
+        public int ftpConnectionAttempts;
+
         //ftp stuff default for me is 192.168.56.1
         public string ftp;
         public string user;
@@ -108,7 +111,37 @@ namespace WPFAdminControlApp
             await RemoveUserTask();
             await RemoveSQLUserTask();
 
-            if (clickedButton == UIButton)
+            if (clickedButton == LoginToPanelButton)
+            {
+                InterfacePanel.IsEnabled = false;
+
+                ArcadeFTPPanel.IsEnabled = false;
+
+                ArcadeUsersPanel.IsEnabled = false;
+
+                ConnectPanel.IsEnabled = false;
+
+                LoginAccountPanel.IsEnabled = false;
+
+                LoginPanel.IsEnabled = true;
+
+                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+            }
+            else if (clickedButton == ConnectButton)
+            {
+                InterfacePanel.IsEnabled = false;
+
+                ArcadeFTPPanel.IsEnabled = false;
+
+                ArcadeUsersPanel.IsEnabled = false;
+
+                ConnectPanel.IsEnabled = true;
+
+                LoginAccountPanel.IsEnabled = false;
+
+                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+            }
+            else if (clickedButton == UIButton)
             {
                 InterfacePanel.IsEnabled = true;
 
@@ -150,7 +183,7 @@ namespace WPFAdminControlApp
 
                 myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
             }
-            if (clickedButton == LoginAccountsButton)
+            else if (clickedButton == LoginAccountsButton)
             {
                 InterfacePanel.IsEnabled = false;
 
@@ -164,20 +197,6 @@ namespace WPFAdminControlApp
 
                 myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
             }
-            if (clickedButton == ConnectButton)
-            {
-                InterfacePanel.IsEnabled = false;
-
-                ArcadeFTPPanel.IsEnabled = false;
-
-                ArcadeUsersPanel.IsEnabled = false;
-
-                ConnectPanel.IsEnabled = true;
-
-                LoginAccountPanel.IsEnabled = false;
-
-                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
-            }
             else if (clickedButton == InfoButton)
             {
                 InterfacePanel.IsEnabled = false;
@@ -189,6 +208,8 @@ namespace WPFAdminControlApp
                 ConnectPanel.IsEnabled = false;
 
                 LoginAccountPanel.IsEnabled = false;
+
+                LoginPanel.IsEnabled = false;
 
                 FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
                 SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
@@ -250,7 +271,17 @@ namespace WPFAdminControlApp
         }
         #endregion
 
-        #region SetConnectionData
+        #region SetDataFromText
+
+        public void SetCurrentUsername(object sender, TextChangedEventArgs args)
+        {
+            panelLoginUsername = LoginUsernameInfo.Text;
+        }
+
+        public void SetCurrentPassword(object sender, TextChangedEventArgs args)
+        {
+            panelLoginPassword = LoginPasswordInfo.Text;
+        }
 
         public void SetIP(object sender, TextChangedEventArgs args)
         {
@@ -414,6 +445,81 @@ namespace WPFAdminControlApp
             }
         }
 
+        public async Task SQLMakeConnection()
+        {
+            using (SqlConnection myConn = new SqlConnection(connectionToDatabaseString))
+            {
+                try
+                {
+                    myConn.Open();
+
+                    //checkt als database bestaat
+                    string databaseName = "ArcadeDatabase";
+                    if (!DatabaseExists(myConn, databaseName))
+                    {
+                        FirstTimeSQLSetup(myConn);
+                    }
+                    else
+                    {
+                        //MessageBox.Show("Database already exists", "MyProgram", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+
+                    if (myConn.State == ConnectionState.Open)
+                    {
+                        ColorAnimation colorAnimation = new ColorAnimation
+                        {
+                            From = ((SolidColorBrush)SQLEcclipse.Fill).Color,
+                            To = (Color)ColorConverter.ConvertFromString("#006400"),
+                            Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
+                            AutoReverse = false,
+                        };
+
+                        SolidColorBrush brush = (SolidColorBrush)SQLEcclipse.Fill;
+                        brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+
+                        await Task.Delay(1500);
+
+                        MakeSQLConnection.IsEnabled = false;
+                        SQLEnter.IsEnabled = false;
+                        SQLIPtext.IsEnabled = false;
+                        SQLUserText.IsEnabled = false;
+                        SQLPasswordText.IsEnabled = false;
+                        SQLIPtext.Visibility = Visibility.Collapsed;
+                        SQLUserText.Visibility = Visibility.Collapsed;
+                        SQLPasswordText.Visibility = Visibility.Collapsed;
+                        SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                        LoginAccountsButton.IsEnabled = true;
+                        UIButton.IsEnabled = true;
+                        ArcadeAdminButton.IsEnabled = true;
+                        if (MakeFTPConnection.IsEnabled == false && MakeSQLConnection.IsEnabled == false)
+                        {
+                            ConnectButton.IsEnabled = false;
+                            ConnectPanel.IsEnabled = false;
+                            InterfacePanel.IsEnabled = true;
+                            UIButton.IsChecked = true;
+                        }
+
+                        DisableRadioButtonsInWindow();
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    MakeSQLConnection.IsEnabled = true;
+
+                    sqlConnectionAttempts++;
+                    CheckStandardPorts();
+
+                    DisableRadioButtonsInWindow();
+                }
+                finally
+                {
+                    if (myConn.State == ConnectionState.Open)
+                    {
+                        myConn.Close();
+                    }
+                }
+            }
+        }
 
         public void SQLConnectionCheck(object sender, RoutedEventArgs e)
         {
@@ -535,6 +641,61 @@ namespace WPFAdminControlApp
         }
 
         #region SQL_Querry
+
+        public async void LoginToAdminPanel(object sender, RoutedEventArgs e)
+        {
+            string sql = $"SELECT Name, Password FROM UserAccounts";
+            List<MySQLUserAccount> userAccountsList = new List<MySQLUserAccount>();
+
+            using (MySqlConnection connection = new MySqlConnection(connectionToSiteDatabaseString))
+            {
+                MySqlCommand command = new MySqlCommand(sql, connection);
+                connection.Open();
+
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        // Create a new UserAccount object
+                        MySQLUserAccount account = new MySQLUserAccount
+                        {
+                            Name = reader["Name"].ToString(),
+                            Password = reader["Password"].ToString(),
+                        };
+
+                        // Add the account to the list
+                        userAccountsList.Add(account);
+
+                        List<string> addedUsernames = new List<string>(); // List to track usernames already added
+
+                        foreach (var account1 in userAccountsList)
+                        {
+                            if(account1.Name == LoginUsernameInfo.Text && account1.Password == LoginPasswordInfo.Text)
+                            {
+                                LoginPanel.IsEnabled = false;
+                                LoginToPanelButton.IsEnabled = false;
+
+                                ConnectButton.IsEnabled = true;
+                                ConnectButton.IsChecked = true;
+                                ConnectPanel.IsEnabled = true;
+
+                                await DisableRadioButtonsInWindow();
+
+                                await Task.Delay(200);
+
+                                CheckStandardPorts();
+                            }
+                            else
+                            {
+                                MessageBox.Show("Couldnt find account with that username or password");
+                            }
+                        }
+                    }
+                }
+            }
+
+            DisableRadioButtonsInWindow();
+        }
 
         private bool DatabaseExists(SqlConnection connection, string databaseName)
         {
@@ -1358,13 +1519,79 @@ namespace WPFAdminControlApp
 
         public async void FTPMakeConnection(object sender, RoutedEventArgs e)
         {
-            if (ftp == null || user == null || pass == null)
+            if (ftp != null || user != null || pass != null)
             {
-                ftp = "ftp://192.168.1.33";
-                user = "anonymous";
-                pass = "anonymous";
-            }
+                using (var conn = new FtpClient(ftp, user, pass))
+                {
+                    conn.Config.EncryptionMode = FtpEncryptionMode.None;
+                    conn.Config.ValidateAnyCertificate = false;
+                    try
+                    {
+                        conn.Connect();
 
+                        if (conn.IsConnected)
+                        {
+                            ColorAnimation colorAnimation = new ColorAnimation
+                            {
+                                From = ((SolidColorBrush)FTPEcclipse.Fill).Color,
+                                To = (Color)ColorConverter.ConvertFromString("#006400"),
+                                Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
+                                AutoReverse = false,
+                            };
+
+                            SolidColorBrush brush = (SolidColorBrush)FTPEcclipse.Fill;
+                            brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+
+                            await Task.Delay(1500);
+
+                            MakeFTPConnection.IsEnabled = false;
+                            FTPEnter.IsEnabled = false;
+                            FTPIPtext.IsEnabled = false;
+                            FTPUserText.IsEnabled = false;
+                            FTPPasswordText.IsEnabled = false;
+                            FTPIPtext.Visibility = Visibility.Collapsed;
+                            FTPUserText.Visibility = Visibility.Collapsed;
+                            FTPPasswordText.Visibility = Visibility.Collapsed;
+                            FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                            FTPButton.IsEnabled = true;
+
+                            if (MakeFTPConnection.IsEnabled == false && MakeSQLConnection.IsEnabled == false)
+                            {
+                                ConnectButton.IsEnabled = false;
+                                ConnectPanel.IsEnabled = false;
+                                InterfacePanel.IsEnabled = true;
+                                UIButton.IsChecked = true;
+                            }
+                            DisableRadioButtonsInWindow();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ColorAnimation colorAnimation = new ColorAnimation
+                        {
+                            From = ((SolidColorBrush)FTPEcclipse.Fill).Color,
+                            To = (Color)ColorConverter.ConvertFromString("#8B0000"),
+                            Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
+                            AutoReverse = false,
+                        };
+
+                        SolidColorBrush brush = (SolidColorBrush)FTPEcclipse.Fill;
+                        brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+
+                        MakeFTPConnection.IsEnabled = true;
+                        FTPButton.IsEnabled = false;
+                        DisableRadioButtonsInWindow();
+                    }
+                    finally
+                    {
+                        conn.Disconnect();
+                    }
+                }
+            }
+        }
+
+        public async Task FTPMakeConnection()
+        {
             using (var conn = new FtpClient(ftp, user, pass))
             {
                 conn.Config.EncryptionMode = FtpEncryptionMode.None;
@@ -1411,16 +1638,8 @@ namespace WPFAdminControlApp
                 }
                 catch (Exception ex)
                 {
-                    ColorAnimation colorAnimation = new ColorAnimation
-                    {
-                        From = ((SolidColorBrush)FTPEcclipse.Fill).Color,
-                        To = (Color)ColorConverter.ConvertFromString("#8B0000"),
-                        Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
-                        AutoReverse = false,
-                    };
-
-                    SolidColorBrush brush = (SolidColorBrush)FTPEcclipse.Fill;
-                    brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+                    ftpConnectionAttempts++;
+                    CheckStandardPorts();
 
                     MakeFTPConnection.IsEnabled = true;
                     FTPButton.IsEnabled = false;
@@ -1432,7 +1651,6 @@ namespace WPFAdminControlApp
                 }
             }
         }
-
         public void FTPConnectionCheck(object sender, RoutedEventArgs e)
         {
             if (ftp == null || user == null || pass == null)
@@ -1506,9 +1724,54 @@ namespace WPFAdminControlApp
                 conn.CreateDirectory("/test", true);
             }
         }
+
         #endregion
 
         #region Etc
+
+        private async void CheckStandardPorts()
+        {
+            if (ftpConnectionAttempts == 0 && sqlConnectionAttempts == 0)
+            {
+                MessageBox.Show("Checking deafult ports please wait");
+            }
+
+            if (ftpConnectionAttempts == 0)
+            {
+                ftp = "ftp://192.168.1.33";
+                user = "anonymous";
+                pass = "anonymous";
+            }
+            else if (ftpConnectionAttempts == 1)
+            {
+                ftp = "ftp://192.168.56.1";
+                user = "anonymous";
+                pass = "anonymous";
+            }
+            else if (ftpConnectionAttempts == 2)
+            {
+                MessageBox.Show("Couldnt find default port for FTP. try entering it manually");
+            }
+
+            if(sqlConnectionAttempts == 0)
+            {
+                connectionToDatabaseString = "Server=192.168.1.33,54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
+                connectionToTableString = "Server=192.168.1.33,54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass";
+            }
+            else if(sqlConnectionAttempts == 1)
+            {
+                connectionToDatabaseString = "Server=192.168.56.1,54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
+                connectionToTableString = "Server=192.168.56.1,54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass";
+            }
+            else if (sqlConnectionAttempts == 2)
+            {
+                MessageBox.Show("Couldnt find default port for SQL. try entering it manually");
+            }
+
+            await SQLMakeConnection();
+            await FTPMakeConnection();
+        }
+
         private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
