@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -24,6 +25,8 @@ namespace WPFAdminControlApp
         //login variables
         public string panelLoginUsername = "Niels";
         public string panelLoginPassword = "Test";
+
+        public string defaultConnection = "192.168.1.1";
 
         public int sqlConnectionAttempts;
         public int ftpConnectionAttempts;
@@ -410,7 +413,20 @@ namespace WPFAdminControlApp
                         }
 
                         DisableRadioButtonsInWindow();
-                        //AddUserToDatabase("Niels", "123456", true);
+
+                        MessageBoxResult Result = MessageBox.Show("Would you like to set this as your default connection?", "Set as default connection?", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        string filepath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\ArcadeInfo\DefaultConnection.txt";
+
+                        if (Result == MessageBoxResult.Yes)
+                        {
+                            TextReader tr = new StreamReader(filepath);
+                            if (SQLIPtext.Text != tr.ReadLine())
+                            {
+                                TextWriter tw = new StreamWriter(filepath);
+                                tw.WriteLine(SQLIPtext.Text);
+                                tw.Close();
+                            }
+                        }
                     }
                 }
                 catch (SqlException ex)
@@ -1563,6 +1579,20 @@ namespace WPFAdminControlApp
                                 UIButton.IsChecked = true;
                             }
                             DisableRadioButtonsInWindow();
+
+                            MessageBoxResult Result = MessageBox.Show("Would you like to set this as your default connection?", "Set as default connection?", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                            string filepath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\ArcadeInfo\DefaultConnection.txt";
+
+                            if (Result == MessageBoxResult.Yes)
+                            {
+                                TextReader tr = new StreamReader(filepath);
+                                if(SQLIPtext.Text != tr.ReadLine())
+                                {
+                                    TextWriter tw = new StreamWriter(filepath);
+                                    tw.WriteLine(SQLIPtext.Text);
+                                    tw.Close();
+                                }
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -1733,7 +1763,28 @@ namespace WPFAdminControlApp
         {
             if (ftpConnectionAttempts == 0 && sqlConnectionAttempts == 0)
             {
-                MessageBox.Show("Checking deafult ports please wait");
+                MessageBox.Show("Checking default connection please wait");
+
+                string path = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\ArcadeInfo\";
+                string filepath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\ArcadeInfo\DefaultConnection.txt";
+
+                bool exists = System.IO.Directory.Exists(path);
+
+                if (!exists)
+                {
+                    System.IO.Directory.CreateDirectory(path);
+                }
+
+                if (!File.Exists(filepath))
+                {
+                    File.Create(filepath);
+                }
+                else
+                {
+                    TextReader tr = new StreamReader(filepath);
+                    defaultConnection = tr.ReadLine();
+                }
+
             }
 
             if (ftpConnectionAttempts == 0)
@@ -1744,13 +1795,20 @@ namespace WPFAdminControlApp
             }
             else if (ftpConnectionAttempts == 1)
             {
-                ftp = "ftp://192.168.56.1";
-                user = "anonymous";
-                pass = "anonymous";
+                if(defaultConnection != "")
+                {
+                    ftp = $"ftp://{defaultConnection}";
+                    user = "anonymous";
+                    pass = "anonymous";
+                }
+                else
+                {
+
+                }
             }
             else if (ftpConnectionAttempts == 2)
             {
-                MessageBox.Show("Couldnt find default port for FTP. try entering it manually");
+                MessageBox.Show("Couldnt find default connection for FTP. try entering it manually");
             }
 
             if(sqlConnectionAttempts == 0)
@@ -1760,16 +1818,27 @@ namespace WPFAdminControlApp
             }
             else if(sqlConnectionAttempts == 1)
             {
-                connectionToDatabaseString = "Server=192.168.56.1,54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
-                connectionToTableString = "Server=192.168.56.1,54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass";
+                if (defaultConnection != "")
+                {
+
+                }
+                connectionToDatabaseString = $"Server={defaultConnection},54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
+                connectionToTableString = $"Server={defaultConnection},54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass";
             }
             else if (sqlConnectionAttempts == 2)
             {
-                MessageBox.Show("Couldnt find default port for SQL. try entering it manually");
+                MessageBox.Show("Couldnt find default connection for SQL. try entering it manually");
             }
 
-            await SQLMakeConnection();
-            await FTPMakeConnection();
+            if(sqlConnectionAttempts != 2)
+            {
+                await SQLMakeConnection();
+            }
+
+            if (ftpConnectionAttempts != 2)
+            {
+                await FTPMakeConnection();
+            }
         }
 
         private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
