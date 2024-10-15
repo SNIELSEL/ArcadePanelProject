@@ -13,10 +13,12 @@
     <None Remove="Images\Delete.png" />
     <None Remove="Images\enter.png" />
     <None Remove="Images\enter2.png" />
+    <None Remove="Images\enterB.png" />
     <None Remove="Images\load.gif" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Images\enterB.png" />
     <Resource Include="Images\TrippleD_lowerD.ico" />
   </ItemGroup>
 
