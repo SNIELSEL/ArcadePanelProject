@@ -46,7 +46,40 @@
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="Name" Value="AddArcadeUserSQLUser" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter Property="IsChecked" Value="False"/>
+                                <Setter Property="Opacity" Value="1"/>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="Name" Value="AddLoginAccount" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter Property="IsChecked" Value="False"/>
+                                <Setter Property="Opacity" Value="1"/>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
                                 <Condition Property="Name" Value="ChangeUsernames" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter Property="IsChecked" Value="False"/>
+                                <Setter Property="Opacity" Value="1"/>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="Name" Value="ChangePasswordButton" />
                             </MultiTrigger.Conditions>
                             <MultiTrigger.Setters>
                                 <Setter Property="IsChecked" Value="False"/>

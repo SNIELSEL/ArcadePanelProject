@@ -58,9 +58,14 @@ namespace WPFAdminControlApp
         public string connectionToSiteDatabaseString = "Server=193.203.168.80,3306;Database=u716772088_Testing;User Id=u716772088_TestUser;Password=TestPass00;";
         /// </summary>
 
-        /// <anymationSettings>
+        /// <animationSettings>
         public float colorFadeTime = 0.5f;
         //////////
+
+        public bool ConnectedToSQL;
+        public bool ConnectedToFTP;
+        
+        public bool wasLoading;
 
         #endregion
         public MainWindow()
@@ -132,13 +137,22 @@ namespace WPFAdminControlApp
             }
             else if (clickedButton == ConnectButton)
             {
+
+                if(wasLoading == true)
+                {
+                    ConnectPanelLoadingGif.IsEnabled = true;
+                }
+
                 InterfacePanel.IsEnabled = false;
 
                 ArcadeFTPPanel.IsEnabled = false;
 
                 ArcadeUsersPanel.IsEnabled = false;
 
-                ConnectPanel.IsEnabled = true;
+                if(ConnectPanelLoadingGif.IsEnabled != true)
+                {
+                    ConnectPanel.IsEnabled = true;
+                }
 
                 LoginAccountPanel.IsEnabled = false;
 
@@ -202,6 +216,9 @@ namespace WPFAdminControlApp
             }
             else if (clickedButton == InfoButton)
             {
+                wasLoading = true;
+                ConnectPanelLoadingGif.IsEnabled = false;
+
                 InterfacePanel.IsEnabled = false;
 
                 ArcadeFTPPanel.IsEnabled = false;
@@ -422,6 +439,7 @@ namespace WPFAdminControlApp
                             TextReader tr = new StreamReader(filepath);
                             if (SQLIPtext.Text != tr.ReadLine())
                             {
+                                tr.Close();
                                 TextWriter tw = new StreamWriter(filepath);
                                 tw.WriteLine(SQLIPtext.Text);
                                 tw.Close();
@@ -467,75 +485,72 @@ namespace WPFAdminControlApp
             {
                 try
                 {
-                    myConn.Open();
-
-                    //checkt als database bestaat
-                    string databaseName = "ArcadeDatabase";
-                    if (!DatabaseExists(myConn, databaseName))
-                    {
-                        FirstTimeSQLSetup(myConn);
-                    }
-                    else
-                    {
-                        //MessageBox.Show("Database already exists", "MyProgram", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                    await myConn.OpenAsync();
 
                     if (myConn.State == ConnectionState.Open)
                     {
-                        ColorAnimation colorAnimation = new ColorAnimation
+                        await this.Dispatcher.InvokeAsync(async() =>
                         {
-                            From = ((SolidColorBrush)SQLEcclipse.Fill).Color,
-                            To = (Color)ColorConverter.ConvertFromString("#006400"),
-                            Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
-                            AutoReverse = false,
-                        };
+                            ColorAnimation colorAnimation = new ColorAnimation
+                            {
+                                From = ((SolidColorBrush)SQLEcclipse.Fill).Color,
+                                To = (Color)ColorConverter.ConvertFromString("#006400"),
+                                Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
+                                AutoReverse = false,
+                            };
 
-                        SolidColorBrush brush = (SolidColorBrush)SQLEcclipse.Fill;
-                        brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+                            SolidColorBrush brush = (SolidColorBrush)SQLEcclipse.Fill;
+                            brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
 
-                        await Task.Delay(1500);
+                            await Task.Delay(1500);
 
-                        MakeSQLConnection.IsEnabled = false;
-                        SQLEnter.IsEnabled = false;
-                        SQLIPtext.IsEnabled = false;
-                        SQLUserText.IsEnabled = false;
-                        SQLPasswordText.IsEnabled = false;
-                        SQLIPtext.Visibility = Visibility.Collapsed;
-                        SQLUserText.Visibility = Visibility.Collapsed;
-                        SQLPasswordText.Visibility = Visibility.Collapsed;
-                        SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
-                        LoginAccountsButton.IsEnabled = true;
-                        UIButton.IsEnabled = true;
-                        ArcadeAdminButton.IsEnabled = true;
-                        if (MakeFTPConnection.IsEnabled == false && MakeSQLConnection.IsEnabled == false)
-                        {
-                            ConnectButton.IsEnabled = false;
-                            ConnectPanel.IsEnabled = false;
-                            InterfacePanel.IsEnabled = true;
-                            UIButton.IsChecked = true;
-                        }
-
-                        DisableRadioButtonsInWindow();
+                            ConnectedToSQL = true;
+                            MakeSQLConnection.IsEnabled = false;
+                            SQLEnter.IsEnabled = false;
+                            SQLIPtext.IsEnabled = false;
+                            SQLUserText.IsEnabled = false;
+                            SQLPasswordText.IsEnabled = false;
+                            SQLIPtext.Visibility = Visibility.Collapsed;
+                            SQLUserText.Visibility = Visibility.Collapsed;
+                            SQLPasswordText.Visibility = Visibility.Collapsed;
+                            SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                            LoginAccountsButton.IsEnabled = true;
+                            UIButton.IsEnabled = true;
+                            ArcadeAdminButton.IsEnabled = true;
+                            if (ConnectedToFTP == true && ConnectedToSQL == true)
+                            {
+                                ConnectButton.IsEnabled = false;
+                                ConnectPanelLoadingGif.IsEnabled = false;
+                                InterfacePanel.IsEnabled = true;
+                                UIButton.IsChecked = true;
+                            }
+                            await this.Dispatcher.InvokeAsync(() => DisableRadioButtonsInWindow());
+                        });
                     }
                 }
                 catch (SqlException ex)
                 {
-                    MakeSQLConnection.IsEnabled = true;
+                    await this.Dispatcher.InvokeAsync(() =>
+                    {
+                        MakeSQLConnection.IsEnabled = true;
 
-                    sqlConnectionAttempts++;
-                    CheckStandardPorts();
+                        sqlConnectionAttempts++;
+                        CheckStandardPorts();
+                    });
 
-                    DisableRadioButtonsInWindow();
+                    await this.Dispatcher.InvokeAsync(() => DisableRadioButtonsInWindow());
                 }
                 finally
                 {
                     if (myConn.State == ConnectionState.Open)
                     {
-                        myConn.Close();
+                        await myConn.CloseAsync();
                     }
                 }
             }
         }
+
+
 
         public void SQLConnectionCheck(object sender, RoutedEventArgs e)
         {
@@ -693,7 +708,7 @@ namespace WPFAdminControlApp
 
                                 ConnectButton.IsEnabled = true;
                                 ConnectButton.IsChecked = true;
-                                ConnectPanel.IsEnabled = true;
+                                ConnectPanelLoadingGif.IsEnabled = true;
 
                                 await DisableRadioButtonsInWindow();
 
@@ -1588,6 +1603,7 @@ namespace WPFAdminControlApp
                                 TextReader tr = new StreamReader(filepath);
                                 if(SQLIPtext.Text != tr.ReadLine())
                                 {
+                                    tr.Close();
                                     TextWriter tw = new StreamWriter(filepath);
                                     tw.WriteLine(SQLIPtext.Text);
                                     tw.Close();
@@ -1632,48 +1648,56 @@ namespace WPFAdminControlApp
 
                     if (conn.IsConnected)
                     {
-                        ColorAnimation colorAnimation = new ColorAnimation
+                        await this.Dispatcher.InvokeAsync(async () =>
                         {
-                            From = ((SolidColorBrush)FTPEcclipse.Fill).Color,
-                            To = (Color)ColorConverter.ConvertFromString("#006400"),
-                            Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
-                            AutoReverse = false,
-                        };
+                            ColorAnimation colorAnimation = new ColorAnimation
+                            {
+                                From = ((SolidColorBrush)FTPEcclipse.Fill).Color,
+                                To = (Color)ColorConverter.ConvertFromString("#006400"),
+                                Duration = new Duration(TimeSpan.FromSeconds(colorFadeTime)),
+                                AutoReverse = false,
+                            };
 
-                        SolidColorBrush brush = (SolidColorBrush)FTPEcclipse.Fill;
-                        brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+                            SolidColorBrush brush = (SolidColorBrush)FTPEcclipse.Fill;
+                            brush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
 
-                        await Task.Delay(1500);
+                            await Task.Delay(1500);
 
-                        MakeFTPConnection.IsEnabled = false;
-                        FTPEnter.IsEnabled = false;
-                        FTPIPtext.IsEnabled = false;
-                        FTPUserText.IsEnabled = false;
-                        FTPPasswordText.IsEnabled = false;
-                        FTPIPtext.Visibility = Visibility.Collapsed;
-                        FTPUserText.Visibility = Visibility.Collapsed;
-                        FTPPasswordText.Visibility = Visibility.Collapsed;
-                        FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
-                        FTPButton.IsEnabled = true;
+                            ConnectedToFTP = true;
+                            MakeFTPConnection.IsEnabled = false;
+                            FTPEnter.IsEnabled = false;
+                            FTPIPtext.IsEnabled = false;
+                            FTPUserText.IsEnabled = false;
+                            FTPPasswordText.IsEnabled = false;
+                            FTPIPtext.Visibility = Visibility.Collapsed;
+                            FTPUserText.Visibility = Visibility.Collapsed;
+                            FTPPasswordText.Visibility = Visibility.Collapsed;
+                            FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                            FTPButton.IsEnabled = true;
 
-                        if (MakeFTPConnection.IsEnabled == false && MakeSQLConnection.IsEnabled == false)
-                        {
-                            ConnectButton.IsEnabled = false;
-                            ConnectPanel.IsEnabled = false;
-                            InterfacePanel.IsEnabled = true;
-                            UIButton.IsChecked = true;
-                        }
-                        DisableRadioButtonsInWindow();
+                            if (ConnectedToFTP == true && ConnectedToSQL == true)
+                            {
+                                ConnectButton.IsEnabled = false;
+                                ConnectPanelLoadingGif.IsEnabled = false;
+                                InterfacePanel.IsEnabled = true;
+                                UIButton.IsChecked = true;
+                            }
+                            await DisableRadioButtonsInWindow();
+                        });
                     }
                 }
                 catch (Exception ex)
                 {
-                    ftpConnectionAttempts++;
-                    CheckStandardPorts();
+                    await this.Dispatcher.InvokeAsync(async() =>
+                    {
+                        ftpConnectionAttempts++;
+                        CheckStandardPorts();
 
-                    MakeFTPConnection.IsEnabled = true;
-                    FTPButton.IsEnabled = false;
-                    DisableRadioButtonsInWindow();
+                        MakeFTPConnection.IsEnabled = true;
+                        FTPButton.IsEnabled = false;
+
+                        await DisableRadioButtonsInWindow();
+                    });
                 }
                 finally
                 {
@@ -1759,32 +1783,32 @@ namespace WPFAdminControlApp
 
         #region Etc
 
-        private async void CheckStandardPorts()
+        private async Task CheckStandardPorts()
         {
             if (ftpConnectionAttempts == 0 && sqlConnectionAttempts == 0)
             {
                 MessageBox.Show("Checking default connection please wait");
 
-                string path = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\ArcadeInfo\";
-                string filepath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\ArcadeInfo\DefaultConnection.txt";
+                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ArcadeInfo");
+                string filepath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ArcadeInfo", "DefaultConnection.txt");
 
-                bool exists = System.IO.Directory.Exists(path);
-
-                if (!exists)
+                if (!Directory.Exists(path))
                 {
-                    System.IO.Directory.CreateDirectory(path);
+                    Directory.CreateDirectory(path);
                 }
 
                 if (!File.Exists(filepath))
                 {
-                    File.Create(filepath);
+                    File.Create(filepath).Dispose();
                 }
                 else
                 {
-                    TextReader tr = new StreamReader(filepath);
-                    defaultConnection = tr.ReadLine();
+                    using (TextReader tr = new StreamReader(filepath))
+                    {
+                        defaultConnection = await tr.ReadLineAsync();
+                        tr.Close();
+                    }
                 }
-
             }
 
             if (ftpConnectionAttempts == 0)
@@ -1793,53 +1817,42 @@ namespace WPFAdminControlApp
                 user = "anonymous";
                 pass = "anonymous";
             }
-            else if (ftpConnectionAttempts == 1)
+            else if (ftpConnectionAttempts == 1 && defaultConnection != "")
             {
-                if(defaultConnection != "")
-                {
-                    ftp = $"ftp://{defaultConnection}";
-                    user = "anonymous";
-                    pass = "anonymous";
-                }
-                else
-                {
-
-                }
-            }
-            else if (ftpConnectionAttempts == 2)
-            {
-                MessageBox.Show("Couldnt find default connection for FTP. try entering it manually");
+                ftp = $"ftp://{defaultConnection}";
+                user = "anonymous";
+                pass = "anonymous";
             }
 
-            if(sqlConnectionAttempts == 0)
+            if (sqlConnectionAttempts == 0)
             {
                 connectionToDatabaseString = "Server=192.168.1.33,54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
-                connectionToTableString = "Server=192.168.1.33,54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass";
+                connectionToTableString = "Server=192.168.1.33,54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass;";
             }
-            else if(sqlConnectionAttempts == 1)
+            else if (sqlConnectionAttempts == 1 && defaultConnection != "")
             {
-                if (defaultConnection != "")
-                {
-
-                }
                 connectionToDatabaseString = $"Server={defaultConnection},54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
-                connectionToTableString = $"Server={defaultConnection},54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass";
-            }
-            else if (sqlConnectionAttempts == 2)
-            {
-                MessageBox.Show("Couldnt find default connection for SQL. try entering it manually");
+                connectionToTableString = $"Server={defaultConnection},54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass;";
             }
 
-            if(sqlConnectionAttempts != 2)
+            if(sqlConnectionAttempts == 2 && ftpConnectionAttempts == 2)
             {
-                await SQLMakeConnection();
+                MessageBox.Show("Couldn't find default connection. Try entering it manually.");
+                ConnectPanelLoadingGif.IsEnabled = false;
+                ConnectPanel.IsEnabled = true;
             }
 
+            // Run tasks asynchronously for SQL and FTP connections
+            if (sqlConnectionAttempts != 2)
+            {
+                await Task.Run(SQLMakeConnection);
+            }
             if (ftpConnectionAttempts != 2)
             {
-                await FTPMakeConnection();
+                await Task.Run(FTPMakeConnection);
             }
         }
+
 
         private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
@@ -1862,41 +1875,45 @@ namespace WPFAdminControlApp
 
         public async Task DisableAllRadioButtons(DependencyObject parent)
         {
-            // Check if the parent is a valid DependencyObject
-            if (parent == null)
-                return;
-
-            // Iterate over all the child elements of the parent
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            this.Dispatcher.Invoke(() =>
             {
-                var child = VisualTreeHelper.GetChild(parent, i);
+                // Check if the parent is a valid DependencyObject
+                if (parent == null)
+                    return;
 
-                // Check if the child is a RadioButton
-                if (child is RadioButton radioButton)
+                // Iterate over all the child elements of the parent
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
                 {
-                    string buttonName = radioButton.Content.ToString();
-                    if (radioButton.IsEnabled == false)
+                    var child = VisualTreeHelper.GetChild(parent, i);
+
+                    // Check if the child is a RadioButton
+                    if (child is RadioButton radioButton)
                     {
-                        radioButton.Content = "";
-                        radioButton.IsHitTestVisible = false;
-                        radioButton.IsChecked = false;
-                    }
-                    else if (radioButton.IsEnabled == true)
-                    {
-                        for (int j = 0; j < radioButtonList.Count; j++)
+                        string buttonName = radioButton.Content.ToString();
+                        if (radioButton.IsEnabled == false)
                         {
-                            if (radioButton == radioButtonList[j])
+                            radioButton.Content = "";
+                            radioButton.IsHitTestVisible = false;
+                            radioButton.IsChecked = false;
+                        }
+                        else if (radioButton.IsEnabled == true)
+                        {
+                            for (int j = 0; j < radioButtonList.Count; j++)
                             {
-                                radioButton.Content = radioButtonContentList[j];
-                                radioButton.IsHitTestVisible = true;
+                                if (radioButton == radioButtonList[j])
+                                {
+                                    radioButton.Content = radioButtonContentList[j];
+                                    radioButton.IsHitTestVisible = true;
+                                }
                             }
                         }
                     }
-                }
 
-                // Recursively call this method for each child
-                DisableAllRadioButtons(child);
-            }
+                    // Recursively call this method for each child
+                    DisableAllRadioButtons(child);
+                }
+            });
+
         }
 
         private async Task DisableRadioButtonsInWindow()

@@ -13,10 +13,11 @@
     <None Remove="Images\Delete.png" />
     <None Remove="Images\enter.png" />
     <None Remove="Images\enter2.png" />
+    <None Remove="Images\load.gif" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Images\TrippleD_lowerD.ico" />
+    <Resource Include="Images\TrippleD_lowerD.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,12 +32,14 @@
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
     <PackageReference Include="MySql.Data" Version="9.0.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Images\Delete.png" />
     <Resource Include="Images\enter.png" />
     <Resource Include="Images\enter2.png" />
+    <Resource Include="Images\load.gif" />
   </ItemGroup>
 
 </Project>

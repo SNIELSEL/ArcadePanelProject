@@ -13,6 +13,7 @@
                 <ResourceDictionary Source="Theme/DeleteButtonStyle.xaml"/>
                 <ResourceDictionary Source="Theme/TextBlockTheme.xaml"/>
                 <ResourceDictionary Source="Theme/LineTheme.xaml"/>
+                <ResourceDictionary Source="Theme/GifTheme.xaml"/>
                 <ResourceDictionary Source="Theme/EllipseTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
