@@ -7,6 +7,9 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Security.Cryptography;
+using System.Security.Policy;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -64,7 +67,7 @@ namespace WPFAdminControlApp
 
         public bool ConnectedToSQL;
         public bool ConnectedToFTP;
-        
+
         public bool wasLoading;
 
         #endregion
@@ -79,6 +82,15 @@ namespace WPFAdminControlApp
             QuitBar.MouseLeftButtonDown += QuitBar_MouseLeftButtonDown;
 
             this.Loaded += MainWindow_Loaded;
+
+/*                        var hash = HashPasword("Test", out var salt);
+
+                        MessageBox.Show($"Password hash: {hash}");
+                        MessageBox.Show($"Generated salt: {Convert.ToHexString(salt)}");
+
+                        MessageBox.Show(VerifyPassword("Test", hash.ToString(), salt).ToString());*/
+
+                        //AddUserToMySqlDatabase("Niels", "Pass");
         }
 
         #region UIelements 
@@ -138,7 +150,7 @@ namespace WPFAdminControlApp
             else if (clickedButton == ConnectButton)
             {
 
-                if(wasLoading == true)
+                if (wasLoading == true)
                 {
                     ConnectPanelLoadingGif.IsEnabled = true;
                 }
@@ -149,7 +161,7 @@ namespace WPFAdminControlApp
 
                 ArcadeUsersPanel.IsEnabled = false;
 
-                if(ConnectPanelLoadingGif.IsEnabled != true)
+                if (ConnectPanelLoadingGif.IsEnabled != true)
                 {
                     ConnectPanel.IsEnabled = true;
                 }
@@ -263,7 +275,7 @@ namespace WPFAdminControlApp
 
             if (ConnectButton.IsChecked == true)
             {
-                if(MakeSQLConnection.IsEnabled == true)
+                if (MakeSQLConnection.IsEnabled == true)
                 {
                     SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
                 }
@@ -272,7 +284,7 @@ namespace WPFAdminControlApp
                     SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
                 }
 
-                if(MakeFTPConnection.IsEnabled == true)
+                if (MakeFTPConnection.IsEnabled == true)
                 {
                     FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
                 }
@@ -489,7 +501,7 @@ namespace WPFAdminControlApp
 
                     if (myConn.State == ConnectionState.Open)
                     {
-                        await this.Dispatcher.InvokeAsync(async() =>
+                        await this.Dispatcher.InvokeAsync(async () =>
                         {
                             ColorAnimation colorAnimation = new ColorAnimation
                             {
@@ -675,7 +687,7 @@ namespace WPFAdminControlApp
 
         public async void LoginToAdminPanel(object sender, RoutedEventArgs e)
         {
-            string sql = $"SELECT Name, Password FROM UserAccounts";
+            string sql = $"SELECT Name, Password,Salt FROM UserAccounts";
             List<MySQLUserAccount> userAccountsList = new List<MySQLUserAccount>();
 
             using (MySqlConnection connection = new MySqlConnection(connectionToSiteDatabaseString))
@@ -692,6 +704,7 @@ namespace WPFAdminControlApp
                         {
                             Name = reader["Name"].ToString(),
                             Password = reader["Password"].ToString(),
+                            Salt = (byte[])reader["Salt"],
                         };
 
                         // Add the account to the list
@@ -701,7 +714,12 @@ namespace WPFAdminControlApp
 
                         foreach (var account1 in userAccountsList)
                         {
-                            if(account1.Name == LoginUsernameInfo.Text && account1.Password == LoginPasswordInfo.Text)
+                            //debugging
+                            //MessageBox.Show(Convert.ToHexString(account1.Salt));
+                            //MessageBox.Show(account1.Password.ToString());
+                            //MessageBox.Show(VerifyPassword(LoginPasswordInfo.Text, account1.Password, account1.Salt).ToString());
+
+                            if (account1.Name == LoginUsernameInfo.Text && VerifyPassword(LoginPasswordInfo.Text, account1.Password.ToString(), account1.Salt) == true)
                             {
                                 LoginPanel.IsEnabled = false;
                                 LoginToPanelButton.IsEnabled = false;
@@ -709,6 +727,8 @@ namespace WPFAdminControlApp
                                 ConnectButton.IsEnabled = true;
                                 ConnectButton.IsChecked = true;
                                 ConnectPanelLoadingGif.IsEnabled = true;
+
+                                panelLoginPassword = account1.Password.ToString();
 
                                 await DisableRadioButtonsInWindow();
 
@@ -722,6 +742,8 @@ namespace WPFAdminControlApp
                             }
                         }
                     }
+
+                    reader.Close();
                 }
             }
 
@@ -737,7 +759,6 @@ namespace WPFAdminControlApp
                 return result != null;
             }
         }
-
 
         private void FirstTimeSQLSetup(SqlConnection connection)
         {
@@ -1094,6 +1115,7 @@ namespace WPFAdminControlApp
                             Password = reader["Password"].ToString(),
                         };
 
+                        account.Password = account.Password.Replace(account.Password, "**********");
                         // Add the account to the list
                         userAccountsList.Add(account);
 
@@ -1233,6 +1255,8 @@ namespace WPFAdminControlApp
                             Name = reader["Name"].ToString(),
                             Password = reader["Password"].ToString(),
                         };
+
+                        account.Password = account.Password.Replace(account.Password, "**********");
 
                         // Add the account to the list
                         userAccountsList.Add(account);
@@ -1456,7 +1480,9 @@ namespace WPFAdminControlApp
 
         public async void AddUserToMySqlDatabase(string name, string password)
         {
-            string insertQuery = "INSERT INTO UserAccounts (Name, Password) VALUES (@Name, @Password)";
+            string insertQuery = "INSERT INTO UserAccounts (Name, Password, Salt) VALUES (@Name, @Password, @Salt)";
+
+            password = HashPasword(password, out var salt);
 
             using (MySqlConnection connection = new MySqlConnection(connectionToSiteDatabaseString))
             {
@@ -1470,6 +1496,7 @@ namespace WPFAdminControlApp
                         // Define the parameters and their values
                         command.Parameters.AddWithValue("@Name", name);
                         command.Parameters.AddWithValue("@Password", password);
+                        command.Parameters.AddWithValue("@Salt", salt);
 
                         // Execute the insert command
                         int rowsAffected = command.ExecuteNonQuery();
@@ -1479,7 +1506,7 @@ namespace WPFAdminControlApp
                         {
                             MessageBox.Show("User added successfully.");
 
-                           await GetMySQLUsers();
+                            await GetMySQLUsers();
                         }
                         else
                         {
@@ -1487,7 +1514,7 @@ namespace WPFAdminControlApp
                         }
                     }
                 }
-                catch (SqlException ex)
+                catch (MySqlException ex)
                 {
                     // Handle SQL errors
                     MessageBox.Show($"SQL Error: {ex.Message}");
@@ -1512,18 +1539,65 @@ namespace WPFAdminControlApp
 
         public async void ChangePassword(object sender, RoutedEventArgs e)
         {
-            MySqlConnection con = new MySqlConnection(connectionToSiteDatabaseString);
-            con.Open();
+            using (MySqlConnection con = new MySqlConnection(connectionToSiteDatabaseString))
+            {
+                con.Open();
 
-            string sql = $"UPDATE `UserAccounts` SET `Password` = '{NewPasswordField.Text}' WHERE `Password` = '{panelLoginPassword}'";
-            MySqlCommand cmd = new MySqlCommand(sql, con);
-            cmd.ExecuteNonQuery();
-            con.Close();
+                // Get old data using a parameterized query
+                string sql = "SELECT Name, Password, Salt FROM UserAccounts WHERE Password = @OldPassword";
+                using (MySqlCommand command = new MySqlCommand(sql, con))
+                {
+                    command.Parameters.AddWithValue("@OldPassword", panelLoginPassword);
+
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read()) // check if a user was found
+                        {
+                            // Create a new UserAccount
+                            MySQLUserAccount account = new MySQLUserAccount
+                            {
+                                Name = reader["Name"].ToString(),
+                                Password = reader["Password"].ToString(),
+                                Salt = (byte[])reader["Salt"],
+                            };
+
+                            string newPasswordHash = HashPasword(NewPasswordField.Text, out var newSalt);
+
+                            panelLoginPassword = newPasswordHash;
+
+                            reader.Close();
+
+                            // Update the password and salt using parameterized queries
+                            string changePassQuery = "UPDATE UserAccounts SET Password = @NewPassword, Salt = @NewSalt WHERE Name = @UserName";
+                            using (MySqlCommand changePassCMD = new MySqlCommand(changePassQuery, con))
+                            {
+                                changePassCMD.Parameters.AddWithValue("@NewPassword", newPasswordHash);
+                                changePassCMD.Parameters.AddWithValue("@NewSalt", newSalt);
+                                changePassCMD.Parameters.AddWithValue("@UserName", account.Name);
+
+                                int rowsAffected = changePassCMD.ExecuteNonQuery();
+                                if (rowsAffected > 0)
+                                {
+                                    MessageBox.Show("Password changed successfully.");
+                                }
+                                else
+                                {
+                                    MessageBox.Show("Failed to change password.");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Old password does not match.");
+                        }
+                    }
+                }
+            }
 
             await GetMySQLUsers();
-
-            panelLoginPassword = NewPasswordField.Text;
         }
+
+
 
         #endregion
 
@@ -1601,7 +1675,7 @@ namespace WPFAdminControlApp
                             if (Result == MessageBoxResult.Yes)
                             {
                                 TextReader tr = new StreamReader(filepath);
-                                if(SQLIPtext.Text != tr.ReadLine())
+                                if (SQLIPtext.Text != tr.ReadLine())
                                 {
                                     tr.Close();
                                     TextWriter tw = new StreamWriter(filepath);
@@ -1688,7 +1762,7 @@ namespace WPFAdminControlApp
                 }
                 catch (Exception ex)
                 {
-                    await this.Dispatcher.InvokeAsync(async() =>
+                    await this.Dispatcher.InvokeAsync(async () =>
                     {
                         ftpConnectionAttempts++;
                         CheckStandardPorts();
@@ -1835,7 +1909,7 @@ namespace WPFAdminControlApp
                 connectionToTableString = $"Server={defaultConnection},54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass;";
             }
 
-            if(sqlConnectionAttempts == 2 && ftpConnectionAttempts == 2)
+            if (sqlConnectionAttempts == 2 && ftpConnectionAttempts == 2)
             {
                 MessageBox.Show("Couldn't find default connection. Try entering it manually.");
                 ConnectPanelLoadingGif.IsEnabled = false;
@@ -1952,6 +2026,36 @@ namespace WPFAdminControlApp
         }
 
         #endregion
+
+        #region Hashing/Salt
+
+        const int keySize = 64;
+        const int iterations = 4000000;
+        HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
+
+        string HashPasword(string password, out byte[] salt)
+        {
+            salt = RandomNumberGenerator.GetBytes(keySize);
+
+            var hash = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password),
+                salt,
+                iterations,
+                hashAlgorithm,
+                keySize);
+
+            return Convert.ToHexString(hash);
+        }
+
+        bool VerifyPassword(string password, string hash, byte[] salt)
+        {
+            var hashToCompare = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, hashAlgorithm, keySize);
+
+            return CryptographicOperations.FixedTimeEquals(hashToCompare, Convert.FromHexString(hash));
+        }
+
+        #endregion
+
     }
 
     public class UserAccount
@@ -1965,6 +2069,8 @@ namespace WPFAdminControlApp
     {
         public string Name { get; set; }
         public string Password { get; set; }
+
+        public byte[] Salt { get; set; }
     }
 
     public class NotEmptyConverter : IValueConverter

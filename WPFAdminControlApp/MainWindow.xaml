@@ -93,6 +93,7 @@
 
             <StackPanel x:Name="CategoryContentPanel" Grid.Row="1" Grid.Column="1" IsEnabled="True">
 
+                <!-- Login -->
                 <StackPanel x:Name="LoginPanel" IsEnabled="True">
                     <RadioButton x:Name="LoginToPanel" Content="Login Details" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Left" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="720" IsEnabled="True" Margin="0,0,0,0" Style="{StaticResource MenuButtonTheme}"/>
 
@@ -163,7 +164,7 @@
                 </StackPanel>
 
                 <StackPanel x:Name="ConnectPanel" IsEnabled="False">
-                    <RadioButton x:Name="MakeSQLConnection" Content="SQLConnectionTest" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,0,0,0" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="719" IsEnabled="True" Style="{StaticResource MenuButtonTheme}"/>
+                    <RadioButton x:Name="MakeSQLConnection" Content="SQLMakeConnection" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,0,0,0" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="719" IsEnabled="True" Style="{StaticResource MenuButtonTheme}"/>
 
                     <TextBox x:Name="SQLIPtext"
                      Width="250" 
@@ -211,7 +212,7 @@
                             HorizontalAlignment="Center" VerticalAlignment="Top" IsEnabled="True" Style="{StaticResource EllipseTheme}"/>
                     </Canvas>
 
-                    <RadioButton x:Name="MakeFTPConnection" Content="FTPConnectionTest" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Left" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="720" IsEnabled="True" Margin="0,4,0,0" Style="{StaticResource MenuButtonTheme}"/>
+                    <RadioButton x:Name="MakeFTPConnection" Content="FTPMakeConnection" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Left" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="720" IsEnabled="True" Margin="0,4,0,0" Style="{StaticResource MenuButtonTheme}"/>
 
                     <TextBox x:Name="FTPIPtext"
                      Width="250" 
