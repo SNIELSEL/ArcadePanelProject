@@ -1387,16 +1387,41 @@ namespace WPFAdminControlApp
         {
             RadioButton radioButton = sender as RadioButton;
 
-            MySqlConnection con = new MySqlConnection(connectionToSiteDatabaseString);
-            con.Open();
+            using (MySqlConnection con = new MySqlConnection(connectionToSiteDatabaseString))
+            {
+                con.Open();
 
-            string sql = $"DELETE FROM UserAccounts WHERE `Name` = '{radioButton.Content}'";
-            MySqlCommand cmd = new MySqlCommand(sql, con);
-            cmd.ExecuteNonQuery();
-            con.Close();
+                string sql = "SELECT Name, Password FROM UserAccounts WHERE Name = @UserName";
+                using (MySqlCommand cmd = new MySqlCommand(sql, con))
+                {
+                    cmd.Parameters.AddWithValue("@UserName", radioButton.Content.ToString());
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string accountName = reader["Name"].ToString();
+                            string accountPassword = reader["Password"].ToString();
+
+                            if (accountName == panelLoginUsername && accountPassword == panelLoginPassword)
+                            {
+                                MessageBox.Show("You cannot delete the user you are currently logged in as.");
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                string deleteSql = "DELETE FROM UserAccounts WHERE Name = @UserName";
+                using (MySqlCommand deleteCmd = new MySqlCommand(deleteSql, con))
+                {
+                    deleteCmd.Parameters.AddWithValue("@UserName", radioButton.Content.ToString());
+                    deleteCmd.ExecuteNonQuery();
+                }
+            }
 
             await GetMySQLUsers();
         }
+
 
         public async Task RemoveUserTask()
         {
