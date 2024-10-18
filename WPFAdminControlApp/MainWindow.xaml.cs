@@ -402,7 +402,7 @@ namespace WPFAdminControlApp
 
             this.Dispatcher.Invoke(() =>
             {
-                WaitingForResponseText.Text = $"Waiting for response: [{elapsedTime} elapsed]";
+                WaitingForResponseText.Text = $"Waiting for response: [{elapsedTime} seconds elapsed]";
             });
         }
 
