@@ -8,8 +8,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Text;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -17,6 +17,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+
+using Timer = System.Timers.Timer;
 
 #endregion
 
@@ -70,6 +72,9 @@ namespace WPFAdminControlApp
 
         public bool wasLoading;
 
+        public Timer timer = new System.Timers.Timer(1000);
+        public int elapsedTime;
+
         #endregion
         public MainWindow()
         {
@@ -83,14 +88,14 @@ namespace WPFAdminControlApp
 
             this.Loaded += MainWindow_Loaded;
 
-/*                        var hash = HashPasword("Test", out var salt);
+            /*                        var hash = HashPasword("Test", out var salt);
 
-                        MessageBox.Show($"Password hash: {hash}");
-                        MessageBox.Show($"Generated salt: {Convert.ToHexString(salt)}");
+                                    MessageBox.Show($"Password hash: {hash}");
+                                    MessageBox.Show($"Generated salt: {Convert.ToHexString(salt)}");
 
-                        MessageBox.Show(VerifyPassword("Test", hash.ToString(), salt).ToString());*/
+                                    MessageBox.Show(VerifyPassword("Test", hash.ToString(), salt).ToString());*/
 
-                        //AddUserToMySqlDatabase("Niels", "Pass");
+            //AddUserToMySqlDatabase("Niels", "Pass");
         }
 
         #region UIelements 
@@ -376,6 +381,33 @@ namespace WPFAdminControlApp
 
         #region UI
 
+        #region UITimer
+        public void BeginLoadTimer()
+        {
+            elapsedTime = 0;
+            timer.Elapsed += OnTimedEvent;
+            timer.AutoReset = true;
+            timer.Enabled = true;
+            timer.Start();
+        }
+        public void StopLoadTimer()
+        {
+            timer.Stop();
+            elapsedTime = 0;
+        }
+
+        private void OnTimedEvent(Object source, ElapsedEventArgs e)
+        {
+            elapsedTime++;
+
+            this.Dispatcher.Invoke(() =>
+            {
+                WaitingForResponseText.Text = $"Waiting for response: [{elapsedTime} elapsed]";
+            });
+        }
+
+        #endregion
+
         public void ChangeNewsImage(object sender, RoutedEventArgs e)
         {
 
@@ -535,6 +567,7 @@ namespace WPFAdminControlApp
                                 ConnectPanelLoadingGif.IsEnabled = false;
                                 InterfacePanel.IsEnabled = true;
                                 UIButton.IsChecked = true;
+                                StopLoadTimer();
                             }
                             await this.Dispatcher.InvokeAsync(() => DisableRadioButtonsInWindow());
                         });
@@ -561,8 +594,6 @@ namespace WPFAdminControlApp
                 }
             }
         }
-
-
 
         public void SQLConnectionCheck(object sender, RoutedEventArgs e)
         {
@@ -710,7 +741,7 @@ namespace WPFAdminControlApp
                         // Add the account to the list
                         userAccountsList.Add(account);
 
-                        List<string> addedUsernames = new List<string>(); // List to track usernames already added
+                        List<string> addedUsernames = new List<string>();
 
                         foreach (var account1 in userAccountsList)
                         {
@@ -1382,7 +1413,6 @@ namespace WPFAdminControlApp
             await GetUsers();
         }
 
-
         public async void RemoveMySQLUsers(object sender, RoutedEventArgs e)
         {
             RadioButton radioButton = sender as RadioButton;
@@ -1421,7 +1451,6 @@ namespace WPFAdminControlApp
 
             await GetMySQLUsers();
         }
-
 
         public async Task RemoveUserTask()
         {
@@ -1622,8 +1651,6 @@ namespace WPFAdminControlApp
             await GetMySQLUsers();
         }
 
-
-
         #endregion
 
         #endregion
@@ -1780,6 +1807,7 @@ namespace WPFAdminControlApp
                                 ConnectPanelLoadingGif.IsEnabled = false;
                                 InterfacePanel.IsEnabled = true;
                                 UIButton.IsChecked = true;
+                                StopLoadTimer();
                             }
                             await DisableRadioButtonsInWindow();
                         });
@@ -1886,6 +1914,7 @@ namespace WPFAdminControlApp
         {
             if (ftpConnectionAttempts == 0 && sqlConnectionAttempts == 0)
             {
+                BeginLoadTimer();
                 MessageBox.Show("Checking default connection please wait");
 
                 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ArcadeInfo");
@@ -1939,6 +1968,7 @@ namespace WPFAdminControlApp
                 MessageBox.Show("Couldn't find default connection. Try entering it manually.");
                 ConnectPanelLoadingGif.IsEnabled = false;
                 ConnectPanel.IsEnabled = true;
+                StopLoadTimer();
             }
 
             // Run tasks asynchronously for SQL and FTP connections
@@ -1951,7 +1981,6 @@ namespace WPFAdminControlApp
                 await Task.Run(FTPMakeConnection);
             }
         }
-
 
         private T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {

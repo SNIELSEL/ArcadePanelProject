@@ -94,7 +94,7 @@
             <StackPanel x:Name="CategoryContentPanel" Grid.Row="1" Grid.Column="1" IsEnabled="True">
 
                 <!-- Login -->
-                <StackPanel x:Name="LoginPanel" IsEnabled="True">
+                <StackPanel x:Name="LoginPanel" IsEnabled="False">
                     <RadioButton x:Name="LoginToPanel" Content="Login Details" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Left" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="720" IsEnabled="True" Margin="0,0,0,0" Style="{StaticResource MenuButtonTheme}"/>
 
                     <TextBox x:Name="LoginUsernameInfo"
@@ -129,7 +129,7 @@
                     <RadioButton x:Name="ChangeNewsImageButton" Click="ChangeNewsImage" Content="ChangeNewsImage" HorizontalAlignment="Left" Height="37" BorderThickness="2" Foreground="White" FontSize="19" Grid.Row="1" Grid.Column="1" Width="720" Margin="0,10,0,0" IsEnabled="True" Style="{StaticResource MenuButtonTheme}"/>
                 </StackPanel>
 
-                <StackPanel x:Name="ArcadeUsersPanel" IsEnabled="False">
+                <StackPanel x:Name="ArcadeUsersPanel" IsEnabled="True">
                     <!-- ArcadeUsers -->
                     <RadioButton x:Name="UserSQLConnectionTestButton" Click="SQLConnectionCheck" Content="SQLConnectionTest" BorderThickness="2" Height="50" Foreground="White" FontSize="19" Width="720" IsEnabled="True" Style="{StaticResource MenuButtonTheme}"/>
                     <RadioButton x:Name="AddArcadeUserSQLUser" Content="Add user" BorderThickness="2" Margin="0,3,0,0" Height="50" Foreground="White" FontSize="19" Width="720" IsEnabled="True" Style="{StaticResource MenuButtonTheme}"/>
@@ -265,9 +265,12 @@
                     <RadioButton x:Name="FTPEnter" Content="" Click="FTPMakeConnection" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,-47,80,0" Height="35" Grid.Row="1" Grid.Column="1" Width="35" IsEnabled="True" Style="{StaticResource ImageButtonTheme}"/>
                 </StackPanel>
 
-                <StackPanel x:Name="ConnectPanelLoadingGif" IsEnabled="False">
+                <StackPanel x:Name="ConnectPanelLoadingGif" IsEnabled="False" Height="524">
 
-                    <Grid Height="525">
+                    <TextBlock x:Name="PleaseWaitText" Text="Loading default connections this could take a minute" VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="White" FontSize="19" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource TextBlockTheme}" Margin="25,10,0,0" Opacity="0.9"/>
+                    <TextBlock x:Name="WaitingForResponseText" Text="Waiting for response: [time elapsed]" VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="White" FontSize="19" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource TextBlockTheme}" Margin="25,5,0,0" Opacity="0.9"/>
+
+                    <Grid Height="460">
 
                         <Image wpfanimated:ImageBehavior.AnimatedSource="Images/load.gif"
                             wpfanimated:ImageBehavior.RepeatBehavior="1"
