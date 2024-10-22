@@ -100,7 +100,7 @@
                 <!-- Login -->
                 <StackPanel x:Name="LoginPanel" IsEnabled="True">
                     <RadioButton x:Name="LoginToPanel" Content="Login Details" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Left" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="720" IsEnabled="True" Margin="0,0,0,0" Style="{StaticResource MenuButtonTheme}"/>
-                    
+
                     <TextBox x:Name="LoginUsernameInfo"
                         Width="140" 
                         Height="40" 
@@ -119,9 +119,11 @@
                         HorizontalAlignment="Left" 
                         Margin="315,-50,0,0" 
                         Grid.Column="1"
-                        TextChanged="SetCurrentPassword"
                         IsEnabled="True"
+                        Background="#353340"
+                        TextChanged="SetCurrentPassword"
                         Style="{StaticResource PasswordTextBox}"/>
+
 
                     <RadioButton x:Name="LoginEnter" Content="" Click="LoginToAdminPanel" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,-50,230,0" Height="35" Grid.Row="1" Grid.Column="1" Width="35" IsEnabled="True" Style="{StaticResource ImageButtonTheme}"/>
 
@@ -161,9 +163,9 @@
                     <RadioButton x:Name="ChangeUsernames" Content="Change Username" BorderThickness="2" Margin="0,3,0,0" Height="50" Foreground="White" FontSize="19" Width="720" IsEnabled="True" Style="{StaticResource MenuButtonTheme}" Panel.ZIndex="0"/>
                     <RadioButton x:Name="ChangePasswordButton" Content="Change Password" BorderThickness="2" Margin="0,3,0,0" Height="50" Foreground="White" FontSize="19" Width="720" IsEnabled="True" Style="{StaticResource MenuButtonTheme}" Panel.ZIndex="0"/>
                     <TextBox x:Name="AddLoginUser_UserText" Width="140" Height="40" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="150,-205,0,0" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource SQLUserTextBox}"/>
-                    <TextBox x:Name="AddLoginUser_PasswordText" Width="140" Height="40" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="25,-205,0,0" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource SQLPasswordTextBox}"/>
+                    <TextBox x:Name="AddLoginUser_PasswordText" TextChanged="SetLoginPassword" Width="140" Height="40" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="25,-205,0,0" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource SQLPasswordTextBox}"/>
                     <TextBox x:Name="NewUsernameField" Width="140" Height="40" Margin="-130,-150,0,0" IsEnabled="True" Style="{StaticResource SQLUserTextBox}" Panel.ZIndex="1"/>
-                    <TextBox x:Name="NewPasswordField" Width="140" Height="40" Margin="-130,-50,0,0" IsEnabled="True" Style="{StaticResource SQLPasswordTextBox}" Panel.ZIndex="1"/>
+                    <TextBox x:Name="NewPasswordField" TextChanged="ChangeLoginPassword" Width="140" Height="40" Margin="-130,-50,0,0" IsEnabled="True" Style="{StaticResource SQLPasswordTextBox}" Panel.ZIndex="1"/>
 
                     <RadioButton x:Name="AddLoginUsersEnter" Content="" Click="AddMySQLUser" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,-365,234,0" Height="35" Grid.Row="1" Grid.Column="1" Width="35" IsEnabled="True" Style="{StaticResource EnterButtonTheme}"/>
                     <RadioButton x:Name="ChangeUsernameEnter" Content="" Click="ChangeUsername" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,-150,315,0" Height="35" Grid.Row="1" Grid.Column="1" Width="35" IsEnabled="True" Style="{StaticResource EnterButtonTheme}"/>

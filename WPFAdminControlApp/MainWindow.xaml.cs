@@ -2,7 +2,6 @@
 
 using FluentFTP;
 using MySql.Data.MySqlClient;
-using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -30,8 +29,134 @@ namespace WPFAdminControlApp
         #region Variables
         //login variables
         public string panelLoginUsername = "";
-        public string panelLoginPassword = "";
-        public string asteriskPass;
+        private string _panelLoginPassword;
+        public string panelLoginPassword
+        {
+            get { return _panelLoginPassword; }
+            set
+            {
+                if (_panelLoginPassword != value)
+                {
+                    if (value.Length > 0)
+                    {
+                        if (value[^1..] != "*" && _panelLoginPassword != null)
+                        {
+                            if(value.Length >= _panelLoginPassword.Length)
+                            {
+                                _panelLoginPassword += value[^1..];
+
+                                LoginPasswordInfo.Text = new string('*', _panelLoginPassword.Length);
+                                LoginPasswordInfo.CaretIndex = LoginPasswordInfo.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] != "*" && _panelLoginPassword == null)
+                        {
+                            _panelLoginPassword += value[^1..];
+
+                            if (value.Length >= _panelLoginPassword.Length)
+                            {
+                                LoginPasswordInfo.Text = new string('*', _panelLoginPassword.Length);
+                                LoginPasswordInfo.CaretIndex = LoginPasswordInfo.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] == "*" && _panelLoginPassword != null)
+                        {
+                            if (value.Length < _panelLoginPassword.Length)
+                            {
+                                _panelLoginPassword = "";
+                                LoginPasswordInfo.Text = "";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private string _loginAcountToAddPassword;
+        public string loginAcountToAddPassword
+        {
+            get { return _loginAcountToAddPassword; }
+            set
+            {
+                if (_loginAcountToAddPassword != value)
+                {
+                    if (value.Length > 0)
+                    {
+                        if (value[^1..] != "*" && _loginAcountToAddPassword != null)
+                        {
+                            if (value.Length >= _loginAcountToAddPassword.Length)
+                            {
+                                _loginAcountToAddPassword += value[^1..];
+
+                                AddLoginUser_PasswordText.Text = new string('*', _loginAcountToAddPassword.Length);
+                                AddLoginUser_PasswordText.CaretIndex = AddLoginUser_PasswordText.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] != "*" && _loginAcountToAddPassword == null)
+                        {
+                            _loginAcountToAddPassword += value[^1..];
+
+                            if (value.Length >= _loginAcountToAddPassword.Length)
+                            {
+                                AddLoginUser_PasswordText.Text = new string('*', _loginAcountToAddPassword.Length);
+                                AddLoginUser_PasswordText.CaretIndex = AddLoginUser_PasswordText.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] == "*" && _loginAcountToAddPassword != null)
+                        {
+                            if (value.Length < _loginAcountToAddPassword.Length)
+                            {
+                                _loginAcountToAddPassword = "";
+                                AddLoginUser_PasswordText.Text = "";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private string _changeLoginPassword;
+        public string changeLoginPassword
+        {
+            get { return _changeLoginPassword; }
+            set
+            {
+                if (_changeLoginPassword != value)
+                {
+                    if (value.Length > 0)
+                    {
+                        if (value[^1..] != "*" && _changeLoginPassword != null)
+                        {
+                            if (value.Length >= _changeLoginPassword.Length)
+                            {
+                                _changeLoginPassword += value[^1..];
+
+                                NewPasswordField.Text = new string('*', _changeLoginPassword.Length);
+                                NewPasswordField.CaretIndex = NewPasswordField.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] != "*" && _changeLoginPassword == null)
+                        {
+                            _changeLoginPassword += value[^1..];
+
+                            if (value.Length >= _changeLoginPassword.Length)
+                            {
+                                NewPasswordField.Text = new string('*', _changeLoginPassword.Length);
+                                NewPasswordField.CaretIndex = NewPasswordField.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] == "*" && _changeLoginPassword != null)
+                        {
+                            if (value.Length < _changeLoginPassword.Length)
+                            {
+                                _changeLoginPassword = "";
+                                NewPasswordField.Text = "";
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         public string defaultConnection = "192.168.1.1";
 
@@ -55,7 +180,48 @@ namespace WPFAdminControlApp
 
         ////////Creation data////////
         public string SQLuser;
-        public string SQLpass;
+        private string _SQLpass;
+        public string SQLpass
+        {
+            get { return _SQLpass; }
+            set
+            {
+                if (_SQLpass != value)
+                {
+                    if (value.Length > 0)
+                    {
+                        if (value[^1..] != "*" && _SQLpass != null)
+                        {
+                            if (value.Length >= _SQLpass.Length)
+                            {
+                                _SQLpass += value[^1..];
+
+                                AddUser_PasswordText.Text = new string('*', _SQLpass.Length);
+                                AddUser_PasswordText.CaretIndex = AddUser_PasswordText.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] != "*" && _SQLpass == null)
+                        {
+                            _SQLpass += value[^1..];
+
+                            if (value.Length >= _SQLpass.Length)
+                            {
+                                AddUser_PasswordText.Text = new string('*', _SQLpass.Length);
+                                AddUser_PasswordText.CaretIndex = AddUser_PasswordText.Text.Length;
+                            }
+                        }
+                        else if (value[^1..] == "*" && _SQLpass != null)
+                        {
+                            if (value.Length < _SQLpass.Length)
+                            {
+                                _SQLpass = "";
+                                AddUser_PasswordText.Text = "";
+                            }
+                        }
+                    }
+                }
+            }
+        }
         public bool SQLHeadAdmin;
 
         public string connectionToDatabaseString = "Server=192.168.1.33,54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
@@ -323,7 +489,7 @@ namespace WPFAdminControlApp
 
                     myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
                 }
-                
+
 
                 if (ArcadeUsersPanel.IsEnabled == true)
                 {
@@ -388,12 +554,19 @@ namespace WPFAdminControlApp
             panelLoginUsername = LoginUsernameInfo.Text;
         }
 
-        public async void SetCurrentPassword(object sender, TextChangedEventArgs args)
+        public void SetCurrentPassword(object sender, TextChangedEventArgs args)
         {
-            panelLoginPassword += LoginPasswordInfo.Text;
+            panelLoginPassword = LoginPasswordInfo.Text;
         }
 
-
+        public void SetLoginPassword(object sender, TextChangedEventArgs args)
+        {
+            loginAcountToAddPassword = AddLoginUser_PasswordText.Text;
+        }
+        public void ChangeLoginPassword(object sender, TextChangedEventArgs args)
+        {
+            changeLoginPassword = NewPasswordField.Text;
+        }
 
         public void SetIP(object sender, TextChangedEventArgs args)
         {
@@ -796,8 +969,8 @@ namespace WPFAdminControlApp
 
         public async void LoginToAdminPanel(object sender, RoutedEventArgs e)
         {
+            bool foundAccount = false;
 
-            MessageBox.Show(panelLoginPassword);
             string sql = $"SELECT Name, Password,Salt FROM UserAccounts";
             List<MySQLUserAccount> userAccountsList = new List<MySQLUserAccount>();
 
@@ -829,8 +1002,9 @@ namespace WPFAdminControlApp
                             //MessageBox.Show(Convert.ToHexString(account1.Salt));
                             //MessageBox.Show(account1.Password.ToString());
                             //MessageBox.Show(VerifyPassword(LoginPasswordInfo.Text, account1.Password, account1.Salt).ToString());
-                            if (account1.Name == LoginUsernameInfo.Text && VerifyPassword(panelLoginPassword, account1.Password.ToString(), account1.Salt) == true)
+                            if (account1.Name == LoginUsernameInfo.Text && VerifyPassword(panelLoginPassword, account1.Password.ToString(), account1.Salt) == true &&foundAccount == false)
                             {
+                                foundAccount = true;
                                 LoginTextPanel.IsEnabled = false;
                                 LoginPanel.IsEnabled = false;
                                 LoginToPanelButton.IsEnabled = false;
@@ -847,10 +1021,7 @@ namespace WPFAdminControlApp
 
                                 CheckStandardPorts();
                             }
-                            else
-                            {
-                                MessageBox.Show("Couldnt find account with that username or password");
-                            }
+
                         }
                     }
 
@@ -859,6 +1030,11 @@ namespace WPFAdminControlApp
             }
 
             DisableRadioButtonsInWindow();
+
+            if(foundAccount == false)
+            {
+                MessageBox.Show("Couldnt find account with that username or password");
+            }
         }
 
         private bool DatabaseExists(SqlConnection connection, string databaseName)
@@ -1567,7 +1743,7 @@ namespace WPFAdminControlApp
 
         public async void AddMySQLUser(object sender, RoutedEventArgs e)
         {
-            AddUserToMySqlDatabase(AddLoginUser_UserText.Text, AddLoginUser_PasswordText.Text);
+            AddUserToMySqlDatabase(AddLoginUser_UserText.Text, loginAcountToAddPassword);
         }
 
         public void AddUserToDatabase(string name, string password, bool isHeadAdmin)

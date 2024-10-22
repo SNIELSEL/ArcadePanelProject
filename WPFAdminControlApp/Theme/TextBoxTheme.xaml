@@ -103,7 +103,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TextBox}">
-                    <Border x:Name="Border" CornerRadius="10" Background="#353340" Width="120" Height="32">
+                    <Border x:Name="Border" CornerRadius="10" Background="{TemplateBinding Background}" Width="120" Height="32">
                         <Grid>
                             <Rectangle StrokeThickness="1"/>
                             <ScrollViewer x:Name="PART_ContentHost"/>
@@ -140,6 +140,20 @@
                             <Setter Property="Padding" Value="8"/>
                             <Setter Property="FontSize" Value="12"/>
                         </Trigger>
+
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Background" Value="Transparent" />
+                                <Condition Property="Foreground" Value="Transparent" />
+                            </MultiTrigger.Conditions>
+                            <MultiTrigger.Setters>
+                                <Setter TargetName="Placeholder" Property="Foreground" Value="Transparent"/>
+                                <Setter TargetName="Border" Property="Background" Value="Transparent"/>
+                                <Setter TargetName="Placeholder" Property="Background" Value="Transparent"/>
+                                <Setter Property="Opacity" Value="1"/>
+                            </MultiTrigger.Setters>
+                        </MultiTrigger>
+
 
                         <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}, Converter={StaticResource NotEmptyConverter}}" Value="True">
                             <Setter TargetName="Placeholder" Property="Visibility" Value="Collapsed"/>
