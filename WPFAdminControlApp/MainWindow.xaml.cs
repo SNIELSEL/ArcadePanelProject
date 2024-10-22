@@ -2,6 +2,7 @@
 
 using FluentFTP;
 using MySql.Data.MySqlClient;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -28,8 +29,9 @@ namespace WPFAdminControlApp
     {
         #region Variables
         //login variables
-        public string panelLoginUsername = "Niels";
-        public string panelLoginPassword = "Test";
+        public string panelLoginUsername = "";
+        public string panelLoginPassword = "";
+        public string asteriskPass;
 
         public string defaultConnection = "192.168.1.1";
 
@@ -72,6 +74,52 @@ namespace WPFAdminControlApp
 
         public bool wasLoading;
 
+        private bool _loggedInAndConnected;
+        public bool loggedInAndConnected
+        {
+            get { return _loggedInAndConnected; }
+            set
+            {
+                if (_loggedInAndConnected != value)
+                {
+                    _loggedInAndConnected = value;
+
+                    if (loggedInAndConnected && ConnectedToFTP && ConnectedToSQL)
+                    {
+                        UIButton.Foreground = Brushes.White;
+                        UIButton.Focusable = true;
+                        UIButton.IsHitTestVisible = true;
+                        FTPButton.Foreground = Brushes.White;
+                        FTPButton.Focusable = true;
+                        FTPButton.IsHitTestVisible = true;
+                        ArcadeAdminButton.Foreground = Brushes.White;
+                        ArcadeAdminButton.Focusable = true;
+                        ArcadeAdminButton.IsHitTestVisible = true;
+                        LoginAccountsButton.Foreground = Brushes.White;
+                        LoginAccountsButton.Focusable = true;
+                        LoginAccountsButton.IsHitTestVisible = true;
+                    }
+                    else
+                    {
+                        UIButton.Foreground = Brushes.Gray;
+                        UIButton.Focusable = false;
+                        UIButton.IsHitTestVisible = false;
+                        FTPButton.Foreground = Brushes.Gray;
+                        FTPButton.Focusable = false;
+                        FTPButton.IsHitTestVisible = false;
+                        ArcadeAdminButton.Foreground = Brushes.Gray;
+                        ArcadeAdminButton.Focusable = false;
+                        ArcadeAdminButton.IsHitTestVisible = false;
+                        LoginAccountsButton.Foreground = Brushes.Gray;
+                        LoginAccountsButton.Focusable = false;
+                        LoginAccountsButton.IsHitTestVisible = false;
+                    }
+                }
+            }
+        }
+
+
+
         public Timer timer = new System.Timers.Timer(1000);
         public int elapsedTime;
 
@@ -80,25 +128,39 @@ namespace WPFAdminControlApp
         {
             InitializeComponent();
 
-            OpenUserSQLButton.IsEnabled = false;
-            UserSQLConnectionTestButton.IsEnabled = false;
+            SetUIElements();
 
             MoveBar.MouseLeftButtonDown += TitleBar_MouseLeftButtonDown;
             QuitBar.MouseLeftButtonDown += QuitBar_MouseLeftButtonDown;
 
             this.Loaded += MainWindow_Loaded;
 
-            /*                        var hash = HashPasword("Test", out var salt);
-
-                                    MessageBox.Show($"Password hash: {hash}");
-                                    MessageBox.Show($"Generated salt: {Convert.ToHexString(salt)}");
-
-                                    MessageBox.Show(VerifyPassword("Test", hash.ToString(), salt).ToString());*/
-
             //AddUserToMySqlDatabase("Niels", "Pass");
         }
 
         #region UIelements 
+
+        public void SetUIElements()
+        {
+            OpenUserSQLButton.IsEnabled = false;
+            UserSQLConnectionTestButton.IsEnabled = false;
+
+            LoginPanel.Children.Remove(LoginFirstToUnlockText);
+            LoginTextPanel.Children.Add(LoginFirstToUnlockText);
+
+            UIButton.Foreground = Brushes.Gray;
+            UIButton.Focusable = false;
+            UIButton.IsHitTestVisible = false;
+            FTPButton.Foreground = Brushes.Gray;
+            FTPButton.Focusable = false;
+            FTPButton.IsHitTestVisible = false;
+            ArcadeAdminButton.Foreground = Brushes.Gray;
+            ArcadeAdminButton.Focusable = false;
+            ArcadeAdminButton.IsHitTestVisible = false;
+            LoginAccountsButton.Foreground = Brushes.Gray;
+            LoginAccountsButton.Focusable = false;
+            LoginAccountsButton.IsHitTestVisible = false;
+        }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -150,88 +212,12 @@ namespace WPFAdminControlApp
 
                 LoginPanel.IsEnabled = true;
 
-                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
-            }
-            else if (clickedButton == ConnectButton)
-            {
-
-                if (wasLoading == true)
-                {
-                    ConnectPanelLoadingGif.IsEnabled = true;
-                }
-
-                InterfacePanel.IsEnabled = false;
-
-                ArcadeFTPPanel.IsEnabled = false;
-
-                ArcadeUsersPanel.IsEnabled = false;
-
-                if (ConnectPanelLoadingGif.IsEnabled != true)
-                {
-                    ConnectPanel.IsEnabled = true;
-                }
-
-                LoginAccountPanel.IsEnabled = false;
+                LoginTextPanel.IsEnabled = true;
 
                 myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
             }
-            else if (clickedButton == UIButton)
-            {
-                InterfacePanel.IsEnabled = true;
 
-                ArcadeFTPPanel.IsEnabled = false;
-
-                ArcadeUsersPanel.IsEnabled = false;
-
-                ConnectPanel.IsEnabled = false;
-
-                LoginAccountPanel.IsEnabled = false;
-
-                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
-            }
-            else if (clickedButton == FTPButton)
-            {
-                InterfacePanel.IsEnabled = false;
-
-                ArcadeFTPPanel.IsEnabled = true;
-
-                ArcadeUsersPanel.IsEnabled = false;
-
-                ConnectPanel.IsEnabled = false;
-
-                LoginAccountPanel.IsEnabled = false;
-
-                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
-            }
-            else if (clickedButton == ArcadeAdminButton)
-            {
-                InterfacePanel.IsEnabled = false;
-
-                ArcadeFTPPanel.IsEnabled = false;
-
-                ArcadeUsersPanel.IsEnabled = true;
-
-                ConnectPanel.IsEnabled = false;
-
-                LoginAccountPanel.IsEnabled = false;
-
-                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
-            }
-            else if (clickedButton == LoginAccountsButton)
-            {
-                InterfacePanel.IsEnabled = false;
-
-                ArcadeFTPPanel.IsEnabled = false;
-
-                ArcadeUsersPanel.IsEnabled = false;
-
-                ConnectPanel.IsEnabled = false;
-
-                LoginAccountPanel.IsEnabled = true;
-
-                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
-            }
-            else if (clickedButton == InfoButton)
+            if (clickedButton == InfoButton)
             {
                 wasLoading = true;
                 ConnectPanelLoadingGif.IsEnabled = false;
@@ -248,60 +234,147 @@ namespace WPFAdminControlApp
 
                 LoginPanel.IsEnabled = false;
 
+                LoginTextPanel.IsEnabled = false;
+
                 FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
                 SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
                 myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
             }
 
-            if (ArcadeUsersPanel.IsEnabled == true)
+            if (loggedInAndConnected && ConnectedToFTP && ConnectedToSQL)
             {
-                OpenUserSQLButton.IsEnabled = true;
-                UserSQLConnectionTestButton.IsEnabled = true;
-                AddArcadeUserSQLUser.IsEnabled = true;
-                AddUser_PasswordText.IsEnabled = true;
-                AddUser_UserText.IsEnabled = true;
-                IsHeadAdminCheckbox.IsEnabled = true;
-                IsHeadAdminCheckbox.Opacity = 1;
 
-                DisableRadioButtonsInWindow();
-            }
-            else
-            {
-                OpenUserSQLButton.IsEnabled = false;
-                UserSQLConnectionTestButton.IsEnabled = false;
-                AddArcadeUserSQLUser.IsEnabled = false;
-                AddUser_PasswordText.IsEnabled = false;
-                AddUser_UserText.IsEnabled = false;
-                IsHeadAdminCheckbox.IsEnabled = false;
-                IsHeadAdminCheckbox.Opacity = 0;
-
-                DisableRadioButtonsInWindow();
-            }
-
-            if (ConnectButton.IsChecked == true)
-            {
-                if (MakeSQLConnection.IsEnabled == true)
+                if (clickedButton == ConnectButton)
                 {
-                    SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
+
+                    if (wasLoading == true)
+                    {
+                        ConnectPanelLoadingGif.IsEnabled = true;
+                    }
+
+                    InterfacePanel.IsEnabled = false;
+
+                    ArcadeFTPPanel.IsEnabled = false;
+
+                    ArcadeUsersPanel.IsEnabled = false;
+
+                    if (ConnectPanelLoadingGif.IsEnabled != true)
+                    {
+                        ConnectPanel.IsEnabled = true;
+                    }
+
+                    LoginAccountPanel.IsEnabled = false;
+
+                    myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                }
+                else if (clickedButton == UIButton)
+                {
+                    InterfacePanel.IsEnabled = true;
+
+                    ArcadeFTPPanel.IsEnabled = false;
+
+                    ArcadeUsersPanel.IsEnabled = false;
+
+                    ConnectPanel.IsEnabled = false;
+
+                    LoginAccountPanel.IsEnabled = false;
+
+                    myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                }
+                else if (clickedButton == FTPButton)
+                {
+                    InterfacePanel.IsEnabled = false;
+
+                    ArcadeFTPPanel.IsEnabled = true;
+
+                    ArcadeUsersPanel.IsEnabled = false;
+
+                    ConnectPanel.IsEnabled = false;
+
+                    LoginAccountPanel.IsEnabled = false;
+
+                    myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
+                }
+                else if (clickedButton == ArcadeAdminButton)
+                {
+                    InterfacePanel.IsEnabled = false;
+
+                    ArcadeFTPPanel.IsEnabled = false;
+
+                    ArcadeUsersPanel.IsEnabled = true;
+
+                    ConnectPanel.IsEnabled = false;
+
+                    LoginAccountPanel.IsEnabled = false;
+
+                    myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
+                }
+                else if (clickedButton == LoginAccountsButton)
+                {
+                    InterfacePanel.IsEnabled = false;
+
+                    ArcadeFTPPanel.IsEnabled = false;
+
+                    ArcadeUsersPanel.IsEnabled = false;
+
+                    ConnectPanel.IsEnabled = false;
+
+                    LoginAccountPanel.IsEnabled = true;
+
+                    myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
+                }
+                
+
+                if (ArcadeUsersPanel.IsEnabled == true)
+                {
+                    OpenUserSQLButton.IsEnabled = true;
+                    UserSQLConnectionTestButton.IsEnabled = true;
+                    AddArcadeUserSQLUser.IsEnabled = true;
+                    AddUser_PasswordText.IsEnabled = true;
+                    AddUser_UserText.IsEnabled = true;
+                    IsHeadAdminCheckbox.IsEnabled = true;
+                    IsHeadAdminCheckbox.Opacity = 1;
+
+                    DisableRadioButtonsInWindow();
                 }
                 else
                 {
-                    SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                    OpenUserSQLButton.IsEnabled = false;
+                    UserSQLConnectionTestButton.IsEnabled = false;
+                    AddArcadeUserSQLUser.IsEnabled = false;
+                    AddUser_PasswordText.IsEnabled = false;
+                    AddUser_UserText.IsEnabled = false;
+                    IsHeadAdminCheckbox.IsEnabled = false;
+                    IsHeadAdminCheckbox.Opacity = 0;
+
+                    DisableRadioButtonsInWindow();
                 }
 
-                if (MakeFTPConnection.IsEnabled == true)
+                if (ConnectButton.IsChecked == true)
                 {
-                    FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
+                    if (MakeSQLConnection.IsEnabled == true)
+                    {
+                        SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
+                    }
+                    else
+                    {
+                        SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                    }
+
+                    if (MakeFTPConnection.IsEnabled == true)
+                    {
+                        FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#808080"));
+                    }
+                    else
+                    {
+                        FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                    }
                 }
                 else
                 {
                     FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                    SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
                 }
-            }
-            else
-            {
-                FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
-                SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
             }
 
             DisableRadioButtonsInWindow();
@@ -315,10 +388,12 @@ namespace WPFAdminControlApp
             panelLoginUsername = LoginUsernameInfo.Text;
         }
 
-        public void SetCurrentPassword(object sender, TextChangedEventArgs args)
+        public async void SetCurrentPassword(object sender, TextChangedEventArgs args)
         {
-            panelLoginPassword = LoginPasswordInfo.Text;
+            panelLoginPassword += LoginPasswordInfo.Text;
         }
+
+
 
         public void SetIP(object sender, TextChangedEventArgs args)
         {
@@ -453,6 +528,7 @@ namespace WPFAdminControlApp
 
                         await Task.Delay(1500);
 
+                        ConnectedToSQL = true;
                         MakeSQLConnection.IsEnabled = false;
                         SQLEnter.IsEnabled = false;
                         SQLIPtext.IsEnabled = false;
@@ -467,6 +543,7 @@ namespace WPFAdminControlApp
                         ArcadeAdminButton.IsEnabled = true;
                         if (MakeFTPConnection.IsEnabled == false && MakeSQLConnection.IsEnabled == false)
                         {
+                            loggedInAndConnected = true;
                             ConnectButton.IsEnabled = false;
                             ConnectPanel.IsEnabled = false;
                             InterfacePanel.IsEnabled = true;
@@ -563,6 +640,7 @@ namespace WPFAdminControlApp
                             ArcadeAdminButton.IsEnabled = true;
                             if (ConnectedToFTP == true && ConnectedToSQL == true)
                             {
+                                loggedInAndConnected = true;
                                 ConnectButton.IsEnabled = false;
                                 ConnectPanelLoadingGif.IsEnabled = false;
                                 InterfacePanel.IsEnabled = true;
@@ -718,6 +796,8 @@ namespace WPFAdminControlApp
 
         public async void LoginToAdminPanel(object sender, RoutedEventArgs e)
         {
+
+            MessageBox.Show(panelLoginPassword);
             string sql = $"SELECT Name, Password,Salt FROM UserAccounts";
             List<MySQLUserAccount> userAccountsList = new List<MySQLUserAccount>();
 
@@ -749,9 +829,9 @@ namespace WPFAdminControlApp
                             //MessageBox.Show(Convert.ToHexString(account1.Salt));
                             //MessageBox.Show(account1.Password.ToString());
                             //MessageBox.Show(VerifyPassword(LoginPasswordInfo.Text, account1.Password, account1.Salt).ToString());
-
-                            if (account1.Name == LoginUsernameInfo.Text && VerifyPassword(LoginPasswordInfo.Text, account1.Password.ToString(), account1.Salt) == true)
+                            if (account1.Name == LoginUsernameInfo.Text && VerifyPassword(panelLoginPassword, account1.Password.ToString(), account1.Salt) == true)
                             {
+                                LoginTextPanel.IsEnabled = false;
                                 LoginPanel.IsEnabled = false;
                                 LoginToPanelButton.IsEnabled = false;
 
@@ -1711,9 +1791,11 @@ namespace WPFAdminControlApp
                             FTPPasswordText.Visibility = Visibility.Collapsed;
                             FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
                             FTPButton.IsEnabled = true;
+                            ConnectedToFTP = true;
 
                             if (MakeFTPConnection.IsEnabled == false && MakeSQLConnection.IsEnabled == false)
                             {
+                                loggedInAndConnected = true;
                                 ConnectButton.IsEnabled = false;
                                 ConnectPanel.IsEnabled = false;
                                 InterfacePanel.IsEnabled = true;
@@ -1803,6 +1885,7 @@ namespace WPFAdminControlApp
 
                             if (ConnectedToFTP == true && ConnectedToSQL == true)
                             {
+                                loggedInAndConnected = true;
                                 ConnectButton.IsEnabled = false;
                                 ConnectPanelLoadingGif.IsEnabled = false;
                                 InterfacePanel.IsEnabled = true;
@@ -1915,7 +1998,7 @@ namespace WPFAdminControlApp
             if (ftpConnectionAttempts == 0 && sqlConnectionAttempts == 0)
             {
                 BeginLoadTimer();
-                MessageBox.Show("Checking default connection please wait");
+                //MessageBox.Show("Checking default connection please wait");
 
                 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ArcadeInfo");
                 string filepath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ArcadeInfo", "DefaultConnection.txt");
@@ -2109,7 +2192,6 @@ namespace WPFAdminControlApp
         }
 
         #endregion
-
     }
 
     public class UserAccount
@@ -2139,7 +2221,5 @@ namespace WPFAdminControlApp
             throw new NotImplementedException();
         }
     }
-
-
 }
 

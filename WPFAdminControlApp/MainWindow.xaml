@@ -77,11 +77,11 @@
             <StackPanel Grid.Row="1" IsEnabled="True">
 
                 <RadioButton IsEnabled="True" x:Name="LoginToPanelButton" Content="LoginToPanel" IsChecked="True" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
-                <RadioButton IsEnabled="False" x:Name="UIButton" Content="Launcher" IsChecked="False" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
-                <RadioButton IsEnabled="False" x:Name="FTPButton" Content="ArcadeFiles" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
-                <RadioButton IsEnabled="False" x:Name="ArcadeAdminButton" Content="ArcadeAccounts" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
-                <RadioButton IsEnabled="False" x:Name="LoginAccountsButton" Content="LoginAccounts" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
                 <RadioButton IsEnabled="False" x:Name="ConnectButton" Content="Connect" IsChecked="True" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
+                <RadioButton IsEnabled="True" x:Name="UIButton" Content="Launcher" IsChecked="False" Height="50" Foreground="Gray" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
+                <RadioButton IsEnabled="True" x:Name="FTPButton" Content="ArcadeFiles" Height="50" Foreground="Gray" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
+                <RadioButton IsEnabled="True" x:Name="ArcadeAdminButton" Content="ArcadeAccounts" Height="50" Foreground="Gray" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
+                <RadioButton IsEnabled="True" x:Name="LoginAccountsButton" Content="LoginAccounts" Height="50" Foreground="Gray" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
                 <RadioButton IsEnabled="True" x:Name="InfoButton" Content="Info" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" Style="{StaticResource MenuButtonTheme}"/>
 
             </StackPanel>
@@ -91,12 +91,16 @@
                 <RadioButton x:Name="LoginButton" Content="Login" Height="50" Foreground="White" FontSize="18" Click="ChangeButtonState" IsChecked="True" Style="{StaticResource MenuButtonTheme}"/>
             </StackPanel>
 
+            <StackPanel x:Name="LoginTextPanel" Grid.Row="0" Grid.Column="1" IsEnabled="True">
+                
+            </StackPanel>
+            
             <StackPanel x:Name="CategoryContentPanel" Grid.Row="1" Grid.Column="1" IsEnabled="True">
 
                 <!-- Login -->
                 <StackPanel x:Name="LoginPanel" IsEnabled="True">
                     <RadioButton x:Name="LoginToPanel" Content="Login Details" BorderThickness="2" VerticalAlignment="Top" HorizontalAlignment="Left" Height="50" Foreground="White" FontSize="17" Grid.Row="1" Grid.Column="1" Width="720" IsEnabled="True" Margin="0,0,0,0" Style="{StaticResource MenuButtonTheme}"/>
-
+                    
                     <TextBox x:Name="LoginUsernameInfo"
                         Width="140" 
                         Height="40" 
@@ -120,6 +124,9 @@
                         Style="{StaticResource PasswordTextBox}"/>
 
                     <RadioButton x:Name="LoginEnter" Content="" Click="LoginToAdminPanel" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,-50,230,0" Height="35" Grid.Row="1" Grid.Column="1" Width="35" IsEnabled="True" Style="{StaticResource ImageButtonTheme}"/>
+
+                    <TextBlock x:Name="LoginFirstToUnlockText" Text="Log in to get full acces to all features." VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="White" FontSize="19" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource TextBlockTheme}" Margin="25,25,0,0" Opacity="0.9"/>
+
                 </StackPanel>
 
                 <StackPanel x:Name="InterfacePanel" IsEnabled="False">
@@ -267,7 +274,7 @@
 
                 <StackPanel x:Name="ConnectPanelLoadingGif" IsEnabled="False" Height="524">
 
-                    <TextBlock x:Name="PleaseWaitText" Text="Loading default connections this could take a minute" VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="White" FontSize="19" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource TextBlockTheme}" Margin="25,10,0,0" Opacity="0.9"/>
+                    <TextBlock x:Name="PleaseWaitText" Text="Loading default connections, this could take a minute." VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="White" FontSize="19" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource TextBlockTheme}" Margin="25,10,0,0" Opacity="0.9"/>
                     <TextBlock x:Name="WaitingForResponseText" Text="Waiting for response: [time elapsed]" VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="White" FontSize="19" Grid.Row="1" Grid.Column="1" IsEnabled="True" Style="{StaticResource TextBlockTheme}" Margin="25,5,0,0" Opacity="0.9"/>
 
                     <Grid Height="460">
