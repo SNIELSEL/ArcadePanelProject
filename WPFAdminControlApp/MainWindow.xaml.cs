@@ -1013,8 +1013,6 @@ namespace WPFAdminControlApp
                                 ConnectButton.IsChecked = true;
                                 ConnectPanelLoadingGif.IsEnabled = true;
 
-                                panelLoginPassword = account1.Password.ToString();
-
                                 await DisableRadioButtonsInWindow();
 
                                 await Task.Delay(200);
@@ -1671,14 +1669,41 @@ namespace WPFAdminControlApp
 
         public async void RemoveMySQLUsers(object sender, RoutedEventArgs e)
         {
+            string sql = $"SELECT Name, Password,Salt FROM UserAccounts";
+            List<MySQLUserAccount> userAccountsList = new List<MySQLUserAccount>();
+
+            using (MySqlConnection connection = new MySqlConnection(connectionToSiteDatabaseString))
+            {
+                MySqlCommand command = new MySqlCommand(sql, connection);
+                connection.Open();
+
+                using (MySqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        // Create a new UserAccount object
+                        MySQLUserAccount account = new MySQLUserAccount
+                        {
+                            Name = reader["Name"].ToString(),
+                            Password = reader["Password"].ToString(),
+                            Salt = (byte[])reader["Salt"],
+                        };
+
+                        userAccountsList.Add(account);
+                    }
+                    reader.Close();
+                }
+                connection.Close();
+            }
+
             RadioButton radioButton = sender as RadioButton;
 
             using (MySqlConnection con = new MySqlConnection(connectionToSiteDatabaseString))
             {
                 con.Open();
 
-                string sql = "SELECT Name, Password FROM UserAccounts WHERE Name = @UserName";
-                using (MySqlCommand cmd = new MySqlCommand(sql, con))
+                string namesql = "SELECT Name, Password FROM UserAccounts WHERE Name = @UserName";
+                using (MySqlCommand cmd = new MySqlCommand(namesql, con))
                 {
                     cmd.Parameters.AddWithValue("@UserName", radioButton.Content.ToString());
                     using (MySqlDataReader reader = cmd.ExecuteReader())
@@ -1688,10 +1713,14 @@ namespace WPFAdminControlApp
                             string accountName = reader["Name"].ToString();
                             string accountPassword = reader["Password"].ToString();
 
-                            if (accountName == panelLoginUsername && accountPassword == panelLoginPassword)
+
+                            foreach (var account1 in userAccountsList)
                             {
-                                MessageBox.Show("You cannot delete the user you are currently logged in as.");
-                                return;
+                                if (accountName == panelLoginUsername && VerifyPassword(panelLoginPassword, account1.Password.ToString(), account1.Salt) == true)
+                                {
+                                    MessageBox.Show("You cannot delete the user you are currently logged in as.");
+                                    return;
+                                }
                             }
                         }
                     }
@@ -1854,10 +1883,10 @@ namespace WPFAdminControlApp
                 con.Open();
 
                 // Get old data using a parameterized query
-                string sql = "SELECT Name, Password, Salt FROM UserAccounts WHERE Password = @OldPassword";
+                string sql = "SELECT Name, Password, Salt FROM UserAccounts WHERE Name = @OldName";
                 using (MySqlCommand command = new MySqlCommand(sql, con))
                 {
-                    command.Parameters.AddWithValue("@OldPassword", panelLoginPassword);
+                    command.Parameters.AddWithValue("@OldName", panelLoginUsername);
 
                     using (MySqlDataReader reader = command.ExecuteReader())
                     {
@@ -1871,7 +1900,7 @@ namespace WPFAdminControlApp
                                 Salt = (byte[])reader["Salt"],
                             };
 
-                            string newPasswordHash = HashPasword(NewPasswordField.Text, out var newSalt);
+                            string newPasswordHash = HashPasword(changeLoginPassword, out var newSalt);
 
                             panelLoginPassword = newPasswordHash;
 
