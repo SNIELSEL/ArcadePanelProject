@@ -2229,12 +2229,6 @@ namespace WPFAdminControlApp
 
             if (ftpConnectionAttempts == 0)
             {
-                ftp = "ftp://192.168.1.33";
-                user = "anonymous";
-                pass = "anonymous";
-            }
-            else if (ftpConnectionAttempts == 1 && defaultConnection != "")
-            {
                 ftp = $"ftp://{defaultConnection}";
                 user = "anonymous";
                 pass = "anonymous";
@@ -2242,16 +2236,11 @@ namespace WPFAdminControlApp
 
             if (sqlConnectionAttempts == 0)
             {
-                connectionToDatabaseString = "Server=192.168.1.33,54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
-                connectionToTableString = "Server=192.168.1.33,54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass;";
-            }
-            else if (sqlConnectionAttempts == 1 && defaultConnection != "")
-            {
                 connectionToDatabaseString = $"Server={defaultConnection},54469\\SQLEXPRESS;Database=master;User Id=User;Password=Pass;";
                 connectionToTableString = $"Server={defaultConnection},54469\\SQLEXPRESS; Database=ArcadeDataBase;User Id=User;Password=Pass;";
             }
 
-            if (sqlConnectionAttempts == 2 && ftpConnectionAttempts == 2)
+            if (sqlConnectionAttempts == 1 && ftpConnectionAttempts == 1)
             {
                 MessageBox.Show("Couldn't find default connection. Try entering it manually.");
                 ConnectPanelLoadingGif.IsEnabled = false;
@@ -2260,11 +2249,11 @@ namespace WPFAdminControlApp
             }
 
             // Run tasks asynchronously for SQL and FTP connections
-            if (sqlConnectionAttempts != 2)
+            if (sqlConnectionAttempts != 1)
             {
                 await Task.Run(SQLMakeConnection);
             }
-            if (ftpConnectionAttempts != 2)
+            if (ftpConnectionAttempts != 1)
             {
                 await Task.Run(FTPMakeConnection);
             }
