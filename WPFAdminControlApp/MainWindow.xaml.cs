@@ -13,6 +13,7 @@ using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -284,7 +285,8 @@ namespace WPFAdminControlApp
             }
         }
 
-
+        public RadioButton clickedButton;
+        public RadioButton lastPressedButton;
 
         public Timer timer = new System.Timers.Timer(1000);
         public int elapsedTime;
@@ -359,13 +361,20 @@ namespace WPFAdminControlApp
 
         public async void ChangeButtonState(object sender, RoutedEventArgs e)
         {
-            RadioButton clickedButton = sender as RadioButton;
+            clickedButton = sender as RadioButton;
 
             await RemoveUserTask();
             await RemoveSQLUserTask();
 
+            if (lastPressedButton == null)
+            {
+                lastPressedButton = LoginToPanelButton;
+            }
+
             if (clickedButton == LoginToPanelButton)
             {
+                InfoPanel.IsEnabled = false;
+
                 InterfacePanel.IsEnabled = false;
 
                 ArcadeFTPPanel.IsEnabled = false;
@@ -385,7 +394,7 @@ namespace WPFAdminControlApp
 
             if (clickedButton == InfoButton)
             {
-                wasLoading = true;
+                CategoryContentPanel.IsEnabled = true;
                 ConnectPanelLoadingGif.IsEnabled = false;
 
                 InterfacePanel.IsEnabled = false;
@@ -399,42 +408,162 @@ namespace WPFAdminControlApp
                 LoginAccountPanel.IsEnabled = false;
 
                 LoginPanel.IsEnabled = false;
-
                 LoginTextPanel.IsEnabled = false;
+
+                InfoPanel.IsEnabled = true;
 
                 FTPEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
                 SQLEcclipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+                myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
+
+                if (lastPressedButton == LoginToPanelButton)
+                {
+                    InfoText.Text = "You’re on the control panel login page, where you can access the features on the\n" +
+                    "left by logging in with your username and password.\n" +
+                    "Currently, these features are grayed out because you're not logged in\n" +
+                    "or connected to the arcade’s database and file transfer system.\n" +
+                    "Please log in to enable access.";
+
+                    TroubleshootingText.Text = "If you don't have an account or have forgotten your account details, ask another\n" +
+                        "user to create a new one for you. If, in the unlikely case, no user remembers\n" +
+                        "their details, ask someone who knows how to use MySQL to manually log into the\n" +
+                        "database and create one. If that still doesn’t work, contact me \n" +
+                        "info@NielsHaverkotte.nl.\n\n" +
+                        "If you’re not getting an error but the program still refuses to log in, \n " +
+                        "reach out to me, and I’ll look into it.";
+                    InfoPartPanel.Height = 192;
+                }
+                else if (lastPressedButton == ConnectButton)
+                {
+                    if (wasLoading == true)
+                    {
+                        InfoText.Inlines.Clear();
+
+                        InfoText.Inlines.Add(new Run("This is the loading screen for default ports. The program will check\n"));
+                        InfoText.Inlines.Add(new Run("if it can connect using the default connection string to access the arcade.\n"));
+                        InfoText.Inlines.Add(new Run("If the connection fails, you will be directed to a manual connection panel\n"));
+                        InfoText.Inlines.Add(new Run("where you can enter the connection data manually.\n"));
+
+                        // Clear existing text
+                        TroubleshootingText.Inlines.Clear();
+
+                        // Add text before the hyperlink
+                        TroubleshootingText.Inlines.Add(new Run("If the loading doesn't complete after a minute or if you are not\n"));
+                        TroubleshootingText.Inlines.Add(new Run("redirected after a successful connection, there may be an issue with\n"));
+                        TroubleshootingText.Inlines.Add(new Run("the connection code or threading code. First try closing the program and retry.\n"));
+                        TroubleshootingText.Inlines.Add(new Run("If it then still doesnt work contact me at\n"));
+                        TroubleshootingText.Inlines.Add(new Run("info@NielsHaverkotte.nl, or try to resolve the issue yourself, as\n"));
+                        TroubleshootingText.Inlines.Add(new Run("the project is publicly available on\n" + "GitHub: "));
+
+                        // Create the hyperlink
+                        Hyperlink hyperlink = new Hyperlink(new Run("https://github.com/SNIELSEL/ArcadePanelProject"))
+                        {
+                            NavigateUri = new Uri("https://github.com/SNIELSEL/ArcadePanelProject")
+                        };
+
+                        // Handle the request navigate event
+                        hyperlink.RequestNavigate += (sender, e) => {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = e.Uri.ToString(),
+                                UseShellExecute = true
+                            });
+                        };
+
+                        // Add the hyperlink to the TextBlock
+                        TroubleshootingText.Inlines.Add(hyperlink);
+
+                        // Optionally add some final text or line breaks if needed
+                        TroubleshootingText.Inlines.Add(new Run(".\n"));
+
+
+                        InfoPartPanel.Height = 172;
+                    }
+                    else
+                    {
+                        InfoText.FontSize = 16;
+
+                        InfoText.Inlines.Clear();
+                        InfoText.Inlines.Add(new Run("This is the Manual Connection panel. Here you can set the IP manually\n"));
+                        InfoText.Inlines.Add(new Run("and set the new default connection for future logins.\n"));
+                        InfoText.Inlines.Add(new Run("\n"));
+                        InfoText.Inlines.Add(new Run("The data you need to fill in as username and password are the following:\n"));
+                        InfoText.Inlines.Add(new Run("For SQL, it's User and Pass as login info, and for FTP, it's anonymous\n"));
+                        InfoText.Inlines.Add(new Run("for both the username and password. This is because both require login\n"));
+                        InfoText.Inlines.Add(new Run("info, but normally it's handled by the code. The only thing you need\n"));
+                        InfoText.Inlines.Add(new Run("to fill in manually now is the IP that you can find by typing\n"));
+                        InfoText.Inlines.Add(new Run("ipconfig in the command prompt on the arcade.\n"));
+
+                        TroubleshootingText.Inlines.Clear();
+                        TroubleshootingText.Inlines.Add(new Run("If you still can't connect, try using the default IP: 192.168.1.33. \n"));
+                        TroubleshootingText.Inlines.Add(new Run("If that still doesn't work, check the IP displayed when entering\n"));
+                        TroubleshootingText.Inlines.Add(new Run("ipconfig in the arcade command prompt. You can also try adding\n"));
+                        TroubleshootingText.Inlines.Add(new Run("the port 54469. So, in the IP textbox, type 192.168.1.33,54469.\n"));
+                        TroubleshootingText.Inlines.Add(new Run("If it still doesn't work, contact me at info@NielsHaverkotte.nl.\n"));
+
+                        InfoPartPanel.Height = 250;
+                    }
+                }
+                else if (lastPressedButton == UIButton || lastPressedButton == ArcadeAdminButton || lastPressedButton == FTPButton || lastPressedButton == LoginAccountsButton)
+                {
+                    InfoText.FontSize = 17;
+                    TroubleshootingText.FontSize = 17;
+
+                    InfoText.Inlines.Clear();
+                    InfoText.Inlines.Add(new Run("These are the main functions of the application:\n"));
+                    InfoText.Inlines.Add(new Run("(Launcher) Here you can change some UI elements of the arcade.\n"));
+                    InfoText.Inlines.Add(new Run("(ArcadeFiles) Here you can connect to the arcade via FTP to move files\n"));
+                    InfoText.Inlines.Add(new Run("to the arcade.\n"));
+                    InfoText.Inlines.Add(new Run("(ArcadeAccounts) Here you can add or remove arcade admins who can\n"));
+                    InfoText.Inlines.Add(new Run("log in to the launcher's own admin panel.\n"));
+                    InfoText.Inlines.Add(new Run("(LoginAccounts) Here you can add or remove accounts that can access\n"));
+                    InfoText.Inlines.Add(new Run("this application or change login information.\n"));
+
+                    TroubleshootingText.Inlines.Clear();
+                    TroubleshootingText.Inlines.Add(new Run("There shouldn't be much to troubleshoot at this step since you are\n"));
+                    TroubleshootingText.Inlines.Add(new Run("already connected to the SQL and FTP. However, if you encounter\n"));
+                    TroubleshootingText.Inlines.Add(new Run("any errors, such as the UI not working or user info not updating\n"));
+                    TroubleshootingText.Inlines.Add(new Run("correctly, please send me an email at info@NielsHaverkotte.nl,\n"));
+                    TroubleshootingText.Inlines.Add(new Run("and I will try to fix it as quickly as possible.\n"));
+
+                    InfoPartPanel.Height = 240;
+                }
+            }
+
+
+            if (clickedButton == ConnectButton)
+            {
+
+                if (wasLoading == true)
+                {
+                    ConnectPanelLoadingGif.IsEnabled = true;
+                }
+
+                InterfacePanel.IsEnabled = false;
+
+                ArcadeFTPPanel.IsEnabled = false;
+
+                ArcadeUsersPanel.IsEnabled = false;
+
+                if (ConnectPanelLoadingGif.IsEnabled != true)
+                {
+                    ConnectPanel.IsEnabled = true;
+                }
+
+                LoginAccountPanel.IsEnabled = false;
+
+                InfoPanel.IsEnabled = false;
+
                 myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
             }
 
             if (loggedInAndConnected && ConnectedToFTP && ConnectedToSQL)
             {
 
-                if (clickedButton == ConnectButton)
+                if (clickedButton == UIButton)
                 {
+                    InfoPanel.IsEnabled = false;
 
-                    if (wasLoading == true)
-                    {
-                        ConnectPanelLoadingGif.IsEnabled = true;
-                    }
-
-                    InterfacePanel.IsEnabled = false;
-
-                    ArcadeFTPPanel.IsEnabled = false;
-
-                    ArcadeUsersPanel.IsEnabled = false;
-
-                    if (ConnectPanelLoadingGif.IsEnabled != true)
-                    {
-                        ConnectPanel.IsEnabled = true;
-                    }
-
-                    LoginAccountPanel.IsEnabled = false;
-
-                    myEllipse.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("Transparent"));
-                }
-                else if (clickedButton == UIButton)
-                {
                     InterfacePanel.IsEnabled = true;
 
                     ArcadeFTPPanel.IsEnabled = false;
@@ -449,6 +578,8 @@ namespace WPFAdminControlApp
                 }
                 else if (clickedButton == FTPButton)
                 {
+                    InfoPanel.IsEnabled = false;
+
                     InterfacePanel.IsEnabled = false;
 
                     ArcadeFTPPanel.IsEnabled = true;
@@ -463,6 +594,8 @@ namespace WPFAdminControlApp
                 }
                 else if (clickedButton == ArcadeAdminButton)
                 {
+                    InfoPanel.IsEnabled = false;
+
                     InterfacePanel.IsEnabled = false;
 
                     ArcadeFTPPanel.IsEnabled = false;
@@ -477,6 +610,8 @@ namespace WPFAdminControlApp
                 }
                 else if (clickedButton == LoginAccountsButton)
                 {
+                    InfoPanel.IsEnabled = false;
+
                     InterfacePanel.IsEnabled = false;
 
                     ArcadeFTPPanel.IsEnabled = false;
@@ -493,6 +628,7 @@ namespace WPFAdminControlApp
 
                 if (ArcadeUsersPanel.IsEnabled == true)
                 {
+                    InfoPanel.IsEnabled = false;
                     OpenUserSQLButton.IsEnabled = true;
                     UserSQLConnectionTestButton.IsEnabled = true;
                     AddArcadeUserSQLUser.IsEnabled = true;
@@ -543,6 +679,7 @@ namespace WPFAdminControlApp
                 }
             }
 
+            lastPressedButton = clickedButton;
             DisableRadioButtonsInWindow();
         }
         #endregion
@@ -819,6 +956,8 @@ namespace WPFAdminControlApp
                                 InterfacePanel.IsEnabled = true;
                                 UIButton.IsChecked = true;
                                 StopLoadTimer();
+
+                                lastPressedButton = UIButton;
                             }
                             await this.Dispatcher.InvokeAsync(() => DisableRadioButtonsInWindow());
                         });
@@ -1004,6 +1143,7 @@ namespace WPFAdminControlApp
                             //MessageBox.Show(VerifyPassword(LoginPasswordInfo.Text, account1.Password, account1.Salt).ToString());
                             if (account1.Name == LoginUsernameInfo.Text && VerifyPassword(panelLoginPassword, account1.Password.ToString(), account1.Salt) == true &&foundAccount == false)
                             {
+                                wasLoading = true;
                                 foundAccount = true;
                                 LoginTextPanel.IsEnabled = false;
                                 LoginPanel.IsEnabled = false;
@@ -1012,6 +1152,8 @@ namespace WPFAdminControlApp
                                 ConnectButton.IsEnabled = true;
                                 ConnectButton.IsChecked = true;
                                 ConnectPanelLoadingGif.IsEnabled = true;
+
+                                lastPressedButton = ConnectButton;
 
                                 await DisableRadioButtonsInWindow();
 
@@ -2096,6 +2238,7 @@ namespace WPFAdminControlApp
                                 InterfacePanel.IsEnabled = true;
                                 UIButton.IsChecked = true;
                                 StopLoadTimer();
+                                lastPressedButton = UIButton;
                             }
                             await DisableRadioButtonsInWindow();
                         });
@@ -2216,6 +2359,21 @@ namespace WPFAdminControlApp
                 if (!File.Exists(filepath))
                 {
                     File.Create(filepath).Dispose();
+
+                    using (TextReader tr = new StreamReader(filepath))
+                    {
+                        defaultConnection = await tr.ReadLineAsync();
+                        tr.Close();
+                    }
+
+                    if (defaultConnection == null || defaultConnection == "")
+                    {
+                        defaultConnection = "192.168.1.33";
+
+                        TextWriter tw = new StreamWriter(filepath);
+                        tw.WriteLine(defaultConnection);
+                        tw.Close();
+                    }
                 }
                 else
                 {
@@ -2223,6 +2381,15 @@ namespace WPFAdminControlApp
                     {
                         defaultConnection = await tr.ReadLineAsync();
                         tr.Close();
+                    }
+
+                    if(defaultConnection == null || defaultConnection == "")
+                    {
+                        defaultConnection = "192.168.1.33";
+
+                        TextWriter tw = new StreamWriter(filepath);
+                        tw.WriteLine(defaultConnection);
+                        tw.Close();
                     }
                 }
             }
@@ -2245,7 +2412,12 @@ namespace WPFAdminControlApp
                 MessageBox.Show("Couldn't find default connection. Try entering it manually.");
                 ConnectPanelLoadingGif.IsEnabled = false;
                 ConnectPanel.IsEnabled = true;
+                ConnectButton.IsChecked = true;
+                InfoPanel.IsEnabled = false;
+                lastPressedButton = ConnectButton;
                 StopLoadTimer();
+                wasLoading = false;
+                await DisableRadioButtonsInWindow();
             }
 
             // Run tasks asynchronously for SQL and FTP connections
